@@ -1,2 +1,17 @@
 package: github.com/redBorder/events-counter
-import: []
+import:
+- package: github.com/Sirupsen/logrus
+  version: ^0.11.5
+- package: github.com/redBorder/rbforwarder
+  version: ^0.5.0
+  subpackages:
+  - utils
+testImport:
+- package: github.com/smartystreets/goconvey
+  version: ^1.6.2
+  subpackages:
+  - convey
+- package: github.com/stretchr/testify
+  version: ^1.1.4
+  subpackages:
+  - mock
