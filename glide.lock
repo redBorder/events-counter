@@ -1,11 +1,18 @@
-hash: c7630910b124b3b955f3f8615e7e9b2ba2e5b7a635bfb79c372b182573b1ff34
-updated: 2017-03-17T13:11:29.272039302+01:00
+hash: 811619b509857ee6aeb6b6de715482c671bb66815c9ff8f600825b917ec25f73
+updated: 2017-03-17T13:29:09.039198538+01:00
 imports:
+- name: github.com/benbjohnson/clock
+  version: 7dc76406b6d3c05b5f71a86293cbcf3c4ea03b19
+- name: github.com/confluentinc/confluent-kafka-go
+  version: a9b5c269c66e9a2eb5f195563b2f01e65a84c527
+  subpackages:
+  - kafka
 - name: github.com/oleiade/lane
   version: 3053869314bb02cb983dc2205da8ea2abe46fa96
 - name: github.com/redBorder/rbforwarder
   version: 2e7b0f0a42e76c55e2571d9cd9692737246adf87
   subpackages:
+  - components/batch
   - utils
 - name: github.com/Sirupsen/logrus
   version: ba1b36c82c5e05c4f912a88eab0dcd91a171688f
@@ -15,6 +22,8 @@ imports:
   version: 99f16d856c9836c42d24e7ab64ea72916925fa97
   subpackages:
   - unix
+- name: gopkg.in/yaml.v2
+  version: a3f3340b5840cee44f372bddb5880fcbc419b46a
 testImports:
 - name: github.com/davecgh/go-spew
   version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9

@@ -6,6 +6,10 @@ import:
   version: ^0.5.0
   subpackages:
   - utils
+- package: github.com/confluentinc/confluent-kafka-go
+  version: ^0.9.4
+  subpackages:
+  - kafka
 testImport:
 - package: github.com/smartystreets/goconvey
   version: ^1.6.2
