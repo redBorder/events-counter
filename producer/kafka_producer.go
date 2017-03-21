@@ -27,7 +27,7 @@ import (
 // purposes.
 type RdKafkaProducer interface {
 	ProduceChannel() chan *rdkafka.Message
-	Close() error
+	Close()
 }
 
 // RdKafkaFactory is used to create multiple producers with the same

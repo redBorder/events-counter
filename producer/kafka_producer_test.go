@@ -41,9 +41,8 @@ func (rdkafkaMock *RdProducerMock) ProduceChannel() chan *rdkafka.Message {
 	return args.Get(0).(chan *rdkafka.Message)
 }
 
-func (rdkafkaMock *RdProducerMock) Close() error {
-	args := rdkafkaMock.Called()
-	return args.Error(0)
+func (rdkafkaMock *RdProducerMock) Close() {
+	rdkafkaMock.Called()
 }
 
 /////////////////
