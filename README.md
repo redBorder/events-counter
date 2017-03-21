@@ -61,43 +61,15 @@ Usage of `events-counter`:
 ## Configuration
 
 ```yaml
-monitor:
-  kafka:
-    write_topic: "rb_limits"
-    read_topics:
-      - "rb_counters"
-    config:
-      bootstrap.servers: "kafka:9092"
-      group.id: "monitors"
-      topic.auto.offset.reset: "smallest"
-  timer_s:
-    period: 86400
-    offset: 0
-
 counters:
-  update_interval_s: 5
-  uuid_key: "sensor_uuid"
-  kafka:
-    write_topic: "rb_limits"
-    read_topics:
+  batch_timeout_s: 5                       # Max time to wait before send a batch
+  batch_max_messages: 1000                 # Max number of messages per batch
+  uuid_key: "sensor_uuid"                  # JSON key for the UUID
+  kafka:                                   # Kafka configuration
+    write_topic: "rb_counters"             # Topic to send the count
+    read_topics:                           # Topics to read messages for accounting
       - "rb_flow"
-    config:
+    attributes:                            # Custom internal rdkafka attributes
       bootstrap.servers: "kafka:9092"
       group.id: "counters"
-      topic.auto.offset.reset: "smallest"
-
-limits:
-  uuids:
-    - uuid: 2
-      type: "bytes"
-      limit: 37000000
-    - uuid: 4
-      type: "messages"
-      limit: 1000
-    - uuid: 7
-      type: "bytes"
-      limit: 0
-  default:
-    type: "messages"
-    limit: -1
 ```
