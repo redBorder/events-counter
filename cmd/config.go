@@ -33,7 +33,7 @@ type AppConfig struct {
 	Counters struct {
 		BatchTimeoutSeconds uint   `yaml:"batch_timeout_s" default:"5"`
 		BatchMaxMessages    uint   `yaml:"batch_max_messages" default:"1000"`
-		UUIDKey             string `yaml:"uuid_key" mandatory:"true"`
+		UUIDKey             string `yaml:"uuid_key"`
 		Kafka               struct {
 			ReadTopics      []string          `yaml:"read_topics" mandatory:"true"`
 			WriteTopic      string            `yaml:"write_topic" mandatory:"true"`
