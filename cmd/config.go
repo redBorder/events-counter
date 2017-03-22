@@ -42,26 +42,23 @@ type AppConfig struct {
 		}
 	}
 
-	// Monitor struct {
-	// 	Timer struct {
-	// 		Period uint `yaml:"period" default:"86400"`
-	// 		Offset uint `yaml:"offset" default:"0"`
-	// 	}
-	// 	Kafka struct {
-	// 		ReadTopics      []string          `yaml:"read_topics"`
-	// 		WriteTopic      string            `yaml:"write_topic"`
-	// 		Attributes      map[string]string `yaml:"attributes"`
-	// 		TopicAttributes map[string]string `yaml:"topic_attributes"`
-	// 	}
-	// }
+	Monitor struct {
+		Timer struct {
+			Period int64 `yaml:"period" default:"86400"`
+			Offset int64 `yaml:"offset"`
+		}
+		Kafka struct {
+			ReadTopics      []string          `yaml:"read_topics" mandatory:"true"`
+			WriteTopic      string            `yaml:"write_topic" mandatory:"true"`
+			Attributes      map[string]string `yaml:"attributes"`
+			TopicAttributes map[string]string `yaml:"topic_attributes"`
+		}
+	}
 
-	// Limits struct {
-	// 	UUIDS []struct {
-	// 		UUID      string `yaml:"uuid"`
-	// 		LimitType string `yaml:"type"`
-	// 		Limit     int    `yaml:"limit"`
-	// 	}
-	// }
+	Limits []struct {
+		UUID  string `yaml:"uuid"`
+		Limit int    `yaml:"limit"`
+	}
 }
 
 // verify checks for fields with "mandatory" struc tag set to "true" and if
@@ -91,6 +88,8 @@ func (config *AppConfig) verify() error {
 						return errors.New("Field \"" + fields[i].Name + "\" must be provided")
 					}
 
+				case reflect.Int64:
+					fallthrough
 				case reflect.Int:
 					if values[i].Int() == 0 {
 						return errors.New("Field \"" + fields[i].Name + "\" must be provided")
@@ -152,6 +151,12 @@ func ParseConfig(raw []byte) (*AppConfig, error) {
 func setDefaultField(v reflect.Value, t reflect.StructField, value string) {
 	switch v.Kind().String() {
 	case "int":
+		if defaultValue, err := strconv.ParseInt(value, 10, 32); v.Int() == 0 && err == nil {
+			logrus.Warnf("Defaulting \"%s\" to %d", t.Name, defaultValue)
+			v.SetInt(defaultValue)
+		}
+
+	case "int64":
 		if defaultValue, err := strconv.ParseInt(value, 10, 64); v.Int() == 0 && err == nil {
 			logrus.Warnf("Defaulting \"%s\" to %d", t.Name, defaultValue)
 			v.SetInt(defaultValue)
