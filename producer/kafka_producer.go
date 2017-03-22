@@ -81,7 +81,7 @@ func (kp *KafkaProducer) Spawn(id int) utils.Composer {
 func (kp *KafkaProducer) OnMessage(m *utils.Message, done utils.Done) {
 	payload, err := m.PopPayload()
 	if err != nil {
-		done(m, 1, "Can't get payload from message")
+		done(m, 0, "No payload to produce")
 		return
 	}
 

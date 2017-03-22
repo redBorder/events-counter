@@ -135,7 +135,7 @@ func TestProducer(t *testing.T) {
 		Convey("When a message without payload is received", func() {
 			d := new(Doner)
 			d.doneCalled = make(chan *utils.Message, 1)
-			d.On("Done", mock.AnythingOfType("*utils.Message"), 1, "Can't get payload from message")
+			d.On("Done", mock.AnythingOfType("*utils.Message"), 0, "No payload to produce")
 
 			message := utils.NewMessage()
 
