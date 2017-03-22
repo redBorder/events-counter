@@ -1,7 +1,7 @@
 // Simple utility for counting messages on a Kafka topic.
 //
 // Copyright (C) 2017 ENEO Tecnologia SL
-// Author: Diego Fernández Barrear <bigomby@gmail.com>
+// Author: Diego Fernández Barrera <bigomby@gmail.com>
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
