@@ -1,7 +1,7 @@
 // Simple utility for counting messages on a Kafka topic.
 //
 // Copyright (C) 2017 ENEO Tecnologia SL
-// Author: Diego Fernández Barrear <bigomby@gmail.com>
+// Author: Diego Fernández Barrera <bigomby@gmail.com>
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -100,7 +100,7 @@ func TestCounter(t *testing.T) {
 			Convey("An error getting payload should occurr", func() {
 				d := new(Doner)
 				d.doneCalled = make(chan *utils.Message, 1)
-				d.On("Done", mock.AnythingOfType("*utils.Message"), 1, "Can't get payload from message")
+				d.On("Done", mock.AnythingOfType("*utils.Message"), 0, "No payload to produce")
 
 				counter.OnMessage(message, d.Done)
 				<-d.doneCalled

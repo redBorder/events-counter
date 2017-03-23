@@ -12,10 +12,22 @@
 ## Overview
 
 `events-counter` is a simple utility that can be used for accounting messages
-in a Kafka topic. It supports accounting by number of messages or by total
-number of bytes (regardless the numer of messages).
+in a Kafka topic. It supports accounting by number of bytes (regardless the
+numer of messages).
 
 Messages are expected to be on JSON format when counting messages.
+
+`events-counters` has two independent modules:
+
+- **UUIDCounter**
+  - Reads messages from a set of input topics.
+  - Count the number of bytes of these messages.
+  - Sends a message periodically to an output topic with the account of bytes
+  on the inputs topic.
+- **CountersMonitor**
+  - The input topic of the counter monitor is the output topic of the UUIDCounter.
+  - Reads messages with the account of bytes. Discards old messages.
+  - If the number of total bytes exceeds the limit sends an alert.
 
 ## Installing
 
@@ -62,14 +74,27 @@ Usage of `events-counter`:
 
 ```yaml
 counters:
-  batch_timeout_s: 5                       # Max time to wait before send a batch
-  batch_max_messages: 1000                 # Max number of messages per batch
-  uuid_key: "sensor_uuid"                  # JSON key for the UUID
-  kafka:                                   # Kafka configuration
-    write_topic: "rb_counters"             # Topic to send the count
-    read_topics:                           # Topics to read messages for accounting
+  batch_timeout_s: 5                     # Max time to wait before send a count message
+  batch_max_messages: 1000               # Max number of messages to hold before send a count message
+  uuid_key: "sensor_uuid"                # JSON key for the UUID
+  kafka:                                 # Kafka configuration
+    write_topic: "rb_counters"           # Topic to send the count
+    read_topics:                         # Topics to read messages for accounting
       - "rb_flow"
-    attributes:                            # Custom internal rdkafka attributes
+    attributes:                          # Custom internal rdkafka attributes
       bootstrap.servers: "kafka:9092"
       group.id: "counters"
+
+monitor:
+  timer:
+    period: 86400                        # Width in seconds of the interval between counters reset (86400 -> 24h)
+    offset: 0                            # Offset in seconds to change the start of the interval (0 -> 00:00h)
+  kafka:                                 # Kafka configuration
+    write_topic: "rb_limits"             # Topic to send the alerts
+    read_topics:                         # Topics to read messages with accounting info
+      - "rb_counters"
+    attributes:                          # Custom internal rdkafka attributes
+      bootstrap.servers: "kafka:9092"
+      enable.auto.commit: "false"        # IMPORTANT: Should be set to false
+      group.id: "monitor"
 ```

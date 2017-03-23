@@ -16,19 +16,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package monitor
 
-import (
-	"fmt"
-	"runtime"
+// Count contains the info about a group of messages
+type Count struct {
+	Monitor   string `json:"monitor"`
+	Type      string `json:"type"`
+	Unit      string `json:"unit"`
+	Value     uint64 `json:"value"`
+	UUID      string `json:"uuid"`
+	Timestamp int64  `json:"timestamp"`
+}
 
-	rdkafka "github.com/confluentinc/confluent-kafka-go/kafka"
-)
-
-// PrintVersion displays the application version.
-func PrintVersion() {
-	_, s := rdkafka.LibraryVersion()
-	fmt.Printf("Events Counter\t:: %s\n", version)
-	fmt.Printf("Go\t\t:: %s\n", runtime.Version())
-	fmt.Printf("librdkafka\t:: %s\n", s)
+// Alert contains the information abot a message alerting that the
+// maximum number of messages has been reached.
+type Alert struct {
+	Monitor      string `json:"monitor"`
+	Type         string `json:"type"`
+	UUID         string `json:"uuid,omitempty"`
+	CurrentBytes uint64 `json:"current_bytes,omitempty"`
+	Limit        uint64 `json:"limit,omitempty"`
+	Timestamp    int64  `json:"timestamp"`
 }
