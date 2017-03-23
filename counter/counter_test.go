@@ -100,7 +100,7 @@ func TestCounter(t *testing.T) {
 			Convey("An error getting payload should occurr", func() {
 				d := new(Doner)
 				d.doneCalled = make(chan *utils.Message, 1)
-				d.On("Done", mock.AnythingOfType("*utils.Message"), 1, "Can't get payload from message")
+				d.On("Done", mock.AnythingOfType("*utils.Message"), 0, "No payload to produce")
 
 				counter.OnMessage(message, d.Done)
 				<-d.doneCalled

@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/redBorder/rbforwarder/utils"
 )
 
@@ -62,8 +61,7 @@ func (c *Counter) Spawn(id int) utils.Composer {
 func (c *Counter) OnMessage(m *utils.Message, done utils.Done) {
 	payload, err := m.PopPayload()
 	if err != nil {
-		logrus.Errorln(err)
-		done(m, 1, "Can't get payload from message")
+		done(m, 0, "No payload to produce")
 		return
 	}
 
