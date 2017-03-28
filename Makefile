@@ -23,13 +23,15 @@ uninstall:
 	@rm $(bindir)/$(BIN)
 	@printf "$(MKL_RED)[UNINSTALL]$(MKL_CLR_RESET)  Removed\n"
 
-tests:
+PACKAGE_LIST := $(shell glide novendor)
+tests: vendor
 	@printf "$(MKL_GREEN)[TESTING]$(MKL_CLR_RESET)  Running tests\n"
-	@go test -race -v ./...
+	@go test -race -v $(PACKAGE_LIST)
 
 coverage:
 	@printf "$(MKL_BLUE)[COVERAGE]$(MKL_CLR_RESET) Computing coverage\n"
 	@echo "mode: count" > coverage.out
+	@go test -covermode=count -coverprofile=counter.part ./counter
 	@grep -h -v "mode: count" *.part >> coverage.out
 	@go tool cover -func coverage.out
 
@@ -39,7 +41,7 @@ ifndef GLIDE
 	$(error glide is not installed)
 endif
 	@printf "$(MKL_BLUE)[DEPS]$(MKL_CLR_RESET)  Resolving dependencies\n"
-	@glide update
+	@glide install
 
 clean:
 	rm -f $(BIN)
