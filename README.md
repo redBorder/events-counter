@@ -78,7 +78,7 @@ counters:
   batch_max_messages: 1000               # Max number of messages to hold before send a count message
   uuid_key: "sensor_uuid"                # JSON key for the UUID
   kafka:                                 # Kafka configuration
-    write_topic: "rb_counters"           # Topic to send the count
+    write_topic: "rb_monitor"            # Topic to send the count
     read_topics:                         # Topics to read messages for accounting
       - "rb_flow"
     attributes:                          # Custom internal rdkafka attributes
@@ -92,7 +92,7 @@ monitor:
   kafka:                                 # Kafka configuration
     write_topic: "rb_limits"             # Topic to send the alerts
     read_topics:                         # Topics to read messages with accounting info
-      - "rb_counters"
+      - "rb_monitor"
     attributes:                          # Custom internal rdkafka attributes
       bootstrap.servers: "kafka:9092"
       enable.auto.commit: "false"        # IMPORTANT: Should be set to false
