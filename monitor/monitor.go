@@ -94,6 +94,11 @@ func (mon *CountersMonitor) OnMessage(m *utils.Message, done utils.Done) {
 		return
 	}
 
+	if count.Monitor != "organization_received_bytes" {
+		done(m, 0, "Ignore non \"organization_received_bytes\" message")
+		return
+	}
+
 	if ok = belongsToInterval(count.Timestamp, mon.Period, mon.Offset, mon.clk.Now().Unix()); !ok {
 		done(m, 0, "Message too old")
 		return

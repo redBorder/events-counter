@@ -96,8 +96,7 @@ func TestMonitor(t *testing.T) {
 			message := utils.NewMessage()
 			message.PushPayload([]byte(`
 				{
-					"monitor":"data",
-					"type":"counter",
+					"monitor":"organization_received_bytes",
 					"unit":"bytes",
 					"value":10,
 					"uuid":"unknown",
@@ -126,6 +125,37 @@ func TestMonitor(t *testing.T) {
 			})
 		})
 
+		Convey("When a message with an unknown monitor is received", func() {
+			message := utils.NewMessage()
+			message.PushPayload([]byte(`
+				{
+					"monitor":"cpu",
+					"unit":"%",
+					"value":50,
+					"timestamp":643975200
+				}
+			`))
+
+			Convey("Should discard the message", func() {
+				d := new(Doner)
+				d.doneCalled = make(chan *utils.Message, 1)
+				d.On(
+					"Done",
+					mock.AnythingOfType("*utils.Message"),
+					0,
+					"Ignore non \"organization_received_bytes\" message",
+				)
+
+				monitor.OnMessage(message, d.Done)
+				result := <-d.doneCalled
+				data, err := result.PopPayload()
+				So(err, ShouldNotBeNil)
+				So(data, ShouldBeNil)
+
+				d.AssertExpectations(t)
+			})
+		})
+
 		Convey("When a invalid (no json) message is received", func() {
 			message := utils.NewMessage()
 			message.PushPayload([]byte("not a json message"))
@@ -150,8 +180,7 @@ func TestMonitor(t *testing.T) {
 			message := utils.NewMessage()
 			message.PushPayload([]byte(`
 				{
-					"monitor":"data",
-					"type":"counter",
+					"monitor":"organization_received_bytes",
 					"unit":"bytes",
 					"value":10,
 					"uuid":"unknown",
@@ -203,8 +232,7 @@ func TestMonitorReset(t *testing.T) {
 				message := utils.NewMessage()
 				message.PushPayload([]byte(`
 					{
-					"monitor":"data",
-					"type":"counter",
+					"monitor":"organization_received_bytes",
 					"unit":"bytes",
 					"value":51,
 					"uuid":"my_uuid",
@@ -227,8 +255,7 @@ func TestMonitorReset(t *testing.T) {
 				message := utils.NewMessage()
 				message.PushPayload([]byte(`
 					{
-					"monitor":"data",
-					"type":"counter",
+					"monitor":"organization_received_bytes",
 					"unit":"bytes",
 					"value":51,
 					"uuid":"my_uuid",
@@ -290,8 +317,7 @@ func TestMonitorReset(t *testing.T) {
 				message := utils.NewMessage()
 				message.PushPayload([]byte(`
 						{
-						"monitor":"data",
-						"type":"counter",
+						"monitor":"organization_received_bytes",
 						"unit":"bytes",
 						"value":51,
 						"uuid":"my_uuid",

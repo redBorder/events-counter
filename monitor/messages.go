@@ -21,7 +21,6 @@ package monitor
 // Count contains the info about a group of messages
 type Count struct {
 	Monitor   string `json:"monitor"`
-	Type      string `json:"type"`
 	Unit      string `json:"unit"`
 	Value     uint64 `json:"value"`
 	UUID      string `json:"uuid"`

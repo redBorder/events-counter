@@ -28,7 +28,6 @@ import (
 // Monitor contains the data for generate a JSON with the count of bytes/messages
 type Monitor struct {
 	Monitor   string `json:"monitor"`
-	Type      string `json:"type"`
 	Unit      string `json:"unit"`
 	Value     uint64 `json:"value"`
 	UUID      string `json:"uuid"`
@@ -66,8 +65,7 @@ func (c *Counter) OnMessage(m *utils.Message, done utils.Done) {
 	}
 
 	countData := Monitor{
-		Monitor:   "data",
-		Type:      "counter",
+		Monitor:   "organization_received_bytes",
 		Unit:      "bytes",
 		Value:     uint64(len(payload)),
 		Timestamp: time.Now().Unix(),

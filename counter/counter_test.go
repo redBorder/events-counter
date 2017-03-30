@@ -69,8 +69,7 @@ func TestCounter(t *testing.T) {
 				err = json.Unmarshal(payload, &monitor)
 				So(err, ShouldBeNil)
 
-				So(monitor.Monitor, ShouldEqual, "data")
-				So(monitor.Type, ShouldEqual, "counter")
+				So(monitor.Monitor, ShouldEqual, "organization_received_bytes")
 				So(monitor.Unit, ShouldEqual, "bytes")
 				So(monitor.Value, ShouldEqual, 494)
 
