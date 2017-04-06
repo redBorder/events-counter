@@ -21,7 +21,6 @@ package main
 import (
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	rdkafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/redBorder/events-counter/monitor"
 	"github.com/redBorder/events-counter/producer"
@@ -30,6 +29,8 @@ import (
 
 // CountersMonitor starts the pipeline for the monitoring process.
 func CountersMonitor(config *AppConfig) {
+	log := log.WithField("prefix", "monitor")
+
 	///////////////////////
 	// Monitors Pipeline //
 	///////////////////////
@@ -41,7 +42,7 @@ func CountersMonitor(config *AppConfig) {
 
 	p, err := BootstrapRdKafkaProducer(config.Monitor.Kafka.Attributes)
 	if err != nil {
-		logrus.Fatal("Error creating monitor producer: " + err.Error())
+		log.Fatal("Error creating monitor producer: " + err.Error())
 	}
 	mf := producer.NewRdKafkaFactory(p)
 
@@ -59,6 +60,7 @@ func CountersMonitor(config *AppConfig) {
 			Limits:  limits,
 			Period:  config.Monitor.Timer.Period,
 			Offset:  config.Monitor.Timer.Offset,
+			Log:     log,
 		}})
 	components = append(components, &producer.KafkaProducer{
 		Config: producer.Config{
@@ -74,7 +76,7 @@ func CountersMonitor(config *AppConfig) {
 	go func() {
 		for report := range pipeline.GetReports() {
 			if ok := report.(rbforwarder.Report).Code; ok != 0 {
-				logrus.Errorln("Monitor error: " + report.(rbforwarder.Report).Status)
+				log.Errorln("Monitor error: " + report.(rbforwarder.Report).Status)
 			}
 		}
 	}()
@@ -92,13 +94,13 @@ func CountersMonitor(config *AppConfig) {
 				now)
 			remaining := intervalEnd.Sub(now)
 
-			logrus.Infof("Next reset will occur at: %s", intervalEnd)
+			log.Infof("Next reset will occur at: %s", intervalEnd)
 			<-time.After(remaining)
 
 			pipeline.Produce(nil, map[string]interface{}{
 				"reset_notification": true,
 			}, nil)
-			logrus.Infoln("All counters are set to 0")
+			log.Infoln("All counters are set to 0")
 		}
 	}()
 
@@ -109,47 +111,47 @@ func CountersMonitor(config *AppConfig) {
 	countersConsumer, err := BootstrapRdKafkaConsumer(
 		config.Monitor.Kafka.Attributes, config.Monitor.Kafka.TopicAttributes)
 	if err != nil {
-		logrus.Fatalln("Error creating Kafka counters consumer: " + err.Error())
+		log.Fatalln("Error creating Kafka counters consumer: " + err.Error())
 	}
 
 	countersConsumer.SubscribeTopics(config.Monitor.Kafka.ReadTopics, nil)
 
 	wg.Add(1)
 	go func() {
-		logrus.Infof("Started Kafka Counters consumer: (Topics: %v)",
+		log.Infof("Started Kafka Counters consumer: (Topics: %v)",
 			config.Monitor.Kafka.ReadTopics)
 
 	receiving:
 		for {
 			select {
 			case <-terminate:
-				logrus.Debugln("Terminating Kafka counters consumer...")
+				log.Debugln("Terminating Kafka counters consumer...")
 				break receiving
 
 			case e := <-countersConsumer.Events():
 				switch event := e.(type) {
 				case rdkafka.AssignedPartitions:
 					countersConsumer.Assign(event.Partitions)
-					logrus.Debugln(event.String())
+					log.Debugln(event.String())
 
 				case rdkafka.RevokedPartitions:
 					countersConsumer.Unassign()
-					logrus.Debugln(event.String())
+					log.Debugln(event.String())
 
 				case rdkafka.Error:
-					logrus.Errorln(event.String())
+					log.Errorln(event.String())
 
 				case *rdkafka.Message:
 					pipeline.Produce(event.Value, map[string]interface{}{}, nil)
 
 				default:
-					logrus.Debugln(e.String())
+					log.Debugln(e.String())
 				}
 			}
 		}
 
 		countersConsumer.Close()
-		logrus.Infoln("Kafka counters consumer finished")
+		log.Infoln("Kafka counters consumer finished")
 		wg.Done()
 	}()
 }

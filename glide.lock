@@ -1,5 +1,5 @@
-hash: 811619b509857ee6aeb6b6de715482c671bb66815c9ff8f600825b917ec25f73
-updated: 2017-03-17T13:29:09.039198538+01:00
+hash: 4ad6bbb45ac5e3369e8edd1e5ecbb9da23334e720ac5ee96ac6dfad51233a2af
+updated: 2017-04-06T13:40:26.537186797+02:00
 imports:
 - name: github.com/benbjohnson/clock
   version: 7dc76406b6d3c05b5f71a86293cbcf3c4ea03b19
@@ -7,6 +7,16 @@ imports:
   version: a9b5c269c66e9a2eb5f195563b2f01e65a84c527
   subpackages:
   - kafka
+- name: github.com/fatih/color
+  version: 9131ab34cf20d2f6d83fdc67168a5430d1c7dc23
+- name: github.com/mattn/go-colorable
+  version: 5411d3eea5978e6cdc258b30de592b60df6aba96
+  repo: https://github.com/mattn/go-colorable
+- name: github.com/mattn/go-isatty
+  version: 57fdcb988a5c543893cc61bce354a6e24ab70022
+  repo: https://github.com/mattn/go-isatty
+- name: github.com/mgutz/ansi
+  version: 9520e82c474b0a04dd04f8a40959027271bab992
 - name: github.com/oleiade/lane
   version: 3053869314bb02cb983dc2205da8ea2abe46fa96
 - name: github.com/redBorder/rbforwarder
@@ -18,6 +28,8 @@ imports:
   version: ba1b36c82c5e05c4f912a88eab0dcd91a171688f
 - name: github.com/streamrail/concurrent-map
   version: 8bf1e9bacbf65b10c81d0f4314cf2b1ebef728b5
+- name: github.com/x-cray/logrus-prefixed-formatter
+  version: 9cd0cf058806896bf8ca66f9a957d36bd9e4ce0f
 - name: golang.org/x/sys
   version: 99f16d856c9836c42d24e7ab64ea72916925fa97
   subpackages:
