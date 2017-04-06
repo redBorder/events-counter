@@ -93,7 +93,7 @@ func (mon *CountersMonitor) OnMessage(m *utils.Message, done utils.Done) {
 		}
 
 		m.PushPayload(createResetNotificationMessage())
-		mon.Log.Infof("Sending reset notification")
+		mon.Log.Debugf("Sending reset notification")
 		done(m, 0, "Reset notification")
 		return
 	}

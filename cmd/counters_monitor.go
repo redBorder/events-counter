@@ -100,7 +100,6 @@ func CountersMonitor(config *AppConfig, limitBytes int64) {
 			pipeline.Produce(nil, map[string]interface{}{
 				"reset_notification": true,
 			}, nil)
-			log.Infoln("All counters are set to 0")
 		}
 	}()
 
