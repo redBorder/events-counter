@@ -55,9 +55,14 @@ type AppConfig struct {
 		}
 	}
 
-	Limits []struct {
-		UUID  string `yaml:"uuid"`
-		Limit int    `yaml:"limit"`
+	LicensesDirectory string `yaml:"licenses_directory" mandatory:"true"`
+
+	Licenses []struct {
+		UUID        string         `json:"uuid"`
+		ExpireAt    int64          `json:"expire_at"`
+		LimitBytes  int64          `json:"limit_bytes"`
+		ClusterUUID string         `json:"cluster_uuid"`
+		Sensors     map[string]int `json:"sensors"`
 	}
 }
 

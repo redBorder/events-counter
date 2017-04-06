@@ -28,16 +28,16 @@ import (
 )
 
 // CountersMonitor starts the pipeline for the monitoring process.
-func CountersMonitor(config *AppConfig) {
+func CountersMonitor(config *AppConfig, limitBytes int64) {
 	log := log.WithField("prefix", "monitor")
 
 	///////////////////////
 	// Monitors Pipeline //
 	///////////////////////
 
-	limits := make(map[string]uint64)
-	for _, uuidLimit := range config.Limits {
-		limits[uuidLimit.UUID] = uint64(uuidLimit.Limit)
+	// TODO This only works for one generic UUID
+	limits := map[string]uint64{
+		"*": uint64(limitBytes),
 	}
 
 	p, err := BootstrapRdKafkaProducer(config.Monitor.Kafka.Attributes)
