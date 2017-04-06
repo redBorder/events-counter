@@ -76,19 +76,23 @@ func LoadLicenses(config *AppConfig) (int64, error) {
 				return -1, err
 			}
 
-			valid, err := VerifyLicense(pub, encodedLicense, encodedSignature)
+			err = VerifyLicense(pub, encodedLicense, encodedSignature)
 			if err != nil {
-				return -1, err
-			}
-
-			if !valid {
-				return -1, errors.New("Signature not valid")
+				log.Errorf(
+					"Error verifying license \"%s\": %s", file.Name(), err.Error())
+				continue
 			}
 		}
 
 		license, err := DecodeLicense(encodedLicense)
 		if err != nil {
 			return -1, err
+		}
+
+		expires := time.Unix(license.ExpireAt, 0)
+		if expires.Before(time.Now()) {
+			log.Warnf("License %s has expired", license.UUID)
+			continue
 		}
 
 		log.Infoln(FormatLicense(license))
@@ -162,23 +166,22 @@ func DecodePEM(key []byte) (*rsa.PublicKey, error) {
 // public key.
 func VerifyLicense(
 	pub *rsa.PublicKey, encodedLicense, encodedSignature []byte,
-) (bool, error) {
-	var err error
-
+) error {
 	hashed := sha256.Sum256(encodedLicense)
 	signatureLen := base64.URLEncoding.DecodedLen(len(encodedSignature))
 	signature := make([]byte, signatureLen)
+
 	n, err := base64.URLEncoding.Decode(signature, encodedSignature)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	err = rsa.VerifyPKCS1v15(pub, crypto.SHA256, hashed[:], signature[:n])
 	if err != nil {
-		return false, err
+		return err
 	}
 
-	return true, nil
+	return nil
 }
 
 // DecodeLicense receives a JSON marshaled license a returns a struct with the
