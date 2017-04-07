@@ -55,10 +55,7 @@ type AppConfig struct {
 		}
 	}
 
-	Limits []struct {
-		UUID  string `yaml:"uuid"`
-		Limit int    `yaml:"limit"`
-	}
+	LicensesDirectory string `yaml:"licenses_directory" mandatory:"true"`
 }
 
 // verify checks for fields with "mandatory" struc tag set to "true" and if

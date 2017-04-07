@@ -10,6 +10,10 @@ import:
   version: ^0.9.4
   subpackages:
   - kafka
+- package: github.com/x-cray/logrus-prefixed-formatter
+  version: ^0.3.2
+- package: github.com/fatih/color
+  version: ^1.4.1
 testImport:
 - package: github.com/smartystreets/goconvey
   version: ^1.6.2

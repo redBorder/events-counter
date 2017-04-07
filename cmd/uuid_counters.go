@@ -19,7 +19,6 @@
 package main
 
 import (
-	"github.com/Sirupsen/logrus"
 	rdkafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/redBorder/events-counter/counter"
 	"github.com/redBorder/events-counter/producer"
@@ -29,13 +28,15 @@ import (
 
 // UUIDCountersPipeline starts the pipeline for accounting messages
 func UUIDCountersPipeline(config *AppConfig) {
+	log := log.WithField("prefix", "counter")
+
 	///////////////////////
 	// Counters Pipeline //
 	///////////////////////
 
 	p, err := BootstrapRdKafkaProducer(config.Counters.Kafka.Attributes)
 	if err != nil {
-		logrus.Fatal("Error creating counters producer: " + err.Error())
+		log.Fatal("Error creating counters producer: " + err.Error())
 	}
 	factory := producer.NewRdKafkaFactory(p)
 
@@ -71,7 +72,7 @@ func UUIDCountersPipeline(config *AppConfig) {
 	go func() {
 		for report := range pipeline.GetReports() {
 			if ok := report.(rbforwarder.Report).Code; ok != 0 {
-				logrus.Errorln("UUID Counters error: " + report.(rbforwarder.Report).Status)
+				log.Errorln("UUID Counters error: " + report.(rbforwarder.Report).Status)
 			}
 		}
 	}()
@@ -83,35 +84,35 @@ func UUIDCountersPipeline(config *AppConfig) {
 	kafkaConsumer, err := BootstrapRdKafkaConsumer(
 		config.Counters.Kafka.Attributes, config.Counters.Kafka.TopicAttributes)
 	if err != nil {
-		logrus.Fatalln("Error creating Kafka UUID consumer: " + err.Error())
+		log.Fatalln("Error creating Kafka UUID consumer: " + err.Error())
 	}
 
 	kafkaConsumer.SubscribeTopics(config.Counters.Kafka.ReadTopics, nil)
 
 	wg.Add(1)
 	go func() {
-		logrus.Infof("Started Kafka UUID consumer: (Topics: %v)",
+		log.Infof("Started Kafka UUID consumer: (Topics: %v)",
 			config.Counters.Kafka.ReadTopics)
 
 	receiving:
 		for {
 			select {
 			case <-terminate:
-				logrus.Debugln("Terminating Kafka UUID consumer...")
+				log.Debugln("Terminating Kafka UUID consumer...")
 				break receiving
 
 			case e := <-kafkaConsumer.Events():
 				switch event := e.(type) {
 				case rdkafka.AssignedPartitions:
 					kafkaConsumer.Assign(event.Partitions)
-					logrus.Debugln(event.String())
+					log.Debugln(event.String())
 
 				case rdkafka.RevokedPartitions:
 					kafkaConsumer.Unassign()
-					logrus.Debugln(event.String())
+					log.Debugln(event.String())
 
 				case rdkafka.Error:
-					logrus.Errorln(event.String())
+					log.Errorln(event.String())
 
 				case *rdkafka.Message:
 					// TODO extract the UUID of the message instead of send generic UUID
@@ -121,13 +122,13 @@ func UUIDCountersPipeline(config *AppConfig) {
 					}, nil)
 
 				default:
-					logrus.Debugln(e.String())
+					log.Debugln(e.String())
 				}
 			}
 		}
 
 		kafkaConsumer.Close()
-		logrus.Infoln("Kafka UUID consumer finished")
+		log.Infoln("Kafka UUID consumer finished")
 		wg.Done()
 	}()
 }
