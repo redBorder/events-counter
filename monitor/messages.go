@@ -25,6 +25,7 @@ type Count struct {
 	Value     uint64 `json:"value"`
 	UUID      string `json:"uuid"`
 	Timestamp int64  `json:"timestamp"`
+	IsTeldat  bool   `json:"is_teldat"`
 }
 
 // Alert contains the information abot a message alerting that the

@@ -32,6 +32,7 @@ type Monitor struct {
 	Value     uint64 `json:"value"`
 	UUID      string `json:"uuid"`
 	Timestamp int64  `json:"timestamp"`
+	IsTeldat  bool   `json:"is_teldat"`
 }
 
 // Config contains the configuration for a Counter
@@ -58,10 +59,23 @@ func (c *Counter) Spawn(id int) utils.Composer {
 // bytes on the message (or messages if a batch is received) and send a JSON
 // formatted message to the next component.
 func (c *Counter) OnMessage(m *utils.Message, done utils.Done) {
+	var isTeldat bool
+
 	payload, err := m.PopPayload()
 	if err != nil {
 		done(m, 0, "No payload to produce")
 		return
+	}
+
+	message := make(map[string]interface{})
+	err = json.Unmarshal(payload, &message)
+	if err != nil {
+		done(m, 102, err.Error())
+		return
+	}
+
+	if _, ok := message["product_name"]; ok {
+		isTeldat = true
 	}
 
 	countData := Monitor{
@@ -69,6 +83,7 @@ func (c *Counter) OnMessage(m *utils.Message, done utils.Done) {
 		Unit:      "bytes",
 		Value:     uint64(len(payload)),
 		Timestamp: time.Now().Unix(),
+		IsTeldat:  isTeldat,
 	}
 
 	if !m.Opts.Has("uuid") {

@@ -39,20 +39,13 @@ func (d *Doner) Done(m *utils.Message, code int, status string) {
 
 func TestCounter(t *testing.T) {
 	Convey("Given a counter component", t, func() {
-		factory := Counter{
-			Config{Workers: 42}}
+		factory := Counter{Config{Workers: 42}}
 
 		counter := factory.Spawn(1)
 
 		Convey("When a valid message is received with UUID", func() {
 			message := utils.NewMessage()
-			message.PushPayload([]byte(`Lorem ipsum dolor sit amet, consectetur adipisicing
-        elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-        Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi
-        ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit
-        in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
-        Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia
-        deserunt mollit anim id est laborum.`))
+			message.PushPayload([]byte(`{"message": "Lorem ipsum dolor sit amet"}`))
 			message.Opts.Set("uuid", "test_uuid")
 
 			Convey("A JSON with the number of bytes should be generated", func() {
@@ -71,7 +64,8 @@ func TestCounter(t *testing.T) {
 
 				So(monitor.Monitor, ShouldEqual, "organization_received_bytes")
 				So(monitor.Unit, ShouldEqual, "bytes")
-				So(monitor.Value, ShouldEqual, 494)
+				So(monitor.Value, ShouldEqual, 41)
+				So(monitor.IsTeldat, ShouldBeFalse)
 
 				d.AssertExpectations(t)
 			})
@@ -79,7 +73,7 @@ func TestCounter(t *testing.T) {
 
 		Convey("When a valid message is received without UUID", func() {
 			message := utils.NewMessage()
-			message.PushPayload([]byte("Testing"))
+			message.PushPayload([]byte(`{"message": "Lorem ipsum dolor sit amet"}`))
 
 			Convey("A missing UUID error should occurr", func() {
 				d := new(Doner)
@@ -88,6 +82,50 @@ func TestCounter(t *testing.T) {
 
 				counter.OnMessage(message, d.Done)
 				<-d.doneCalled
+
+				d.AssertExpectations(t)
+			})
+		})
+
+		Convey("When a no valid JSON message is received", func() {
+			message := utils.NewMessage()
+			message.PushPayload([]byte(`Lorem ipsum dolor sit amet`))
+
+			Convey("A missing UUID error should occurr", func() {
+				d := new(Doner)
+				d.doneCalled = make(chan *utils.Message, 1)
+				d.On("Done", mock.AnythingOfType("*utils.Message"), 102, mock.AnythingOfType("string"))
+
+				counter.OnMessage(message, d.Done)
+				<-d.doneCalled
+
+				d.AssertExpectations(t)
+			})
+		})
+
+		Convey("When a message with product_name is received", func() {
+			message := utils.NewMessage()
+			message.PushPayload([]byte(`{"message": "Lorem ipsum dolor sit amet", "product_name": "Teldat"}`))
+			message.Opts.Set("uuid", "test_uuid")
+
+			Convey("Should be marked as a Teldat sensor", func() {
+				d := new(Doner)
+				d.doneCalled = make(chan *utils.Message, 1)
+				d.On("Done", mock.AnythingOfType("*utils.Message"), 0, "")
+
+				counter.OnMessage(message, d.Done)
+				result := <-d.doneCalled
+				payload, err := result.PopPayload()
+				So(err, ShouldBeNil)
+
+				monitor := Monitor{}
+				err = json.Unmarshal(payload, &monitor)
+				So(err, ShouldBeNil)
+
+				So(monitor.Monitor, ShouldEqual, "organization_received_bytes")
+				So(monitor.Unit, ShouldEqual, "bytes")
+				So(monitor.Value, ShouldEqual, 67)
+				So(monitor.IsTeldat, ShouldBeTrue)
 
 				d.AssertExpectations(t)
 			})

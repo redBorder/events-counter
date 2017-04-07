@@ -118,6 +118,11 @@ func (mon *CountersMonitor) OnMessage(m *utils.Message, done utils.Done) {
 		return
 	}
 
+	if count.IsTeldat {
+		done(m, 0, "Teldat sensor")
+		return
+	}
+
 	if bytes, ok = mon.db[count.UUID]; !ok {
 		m.PushPayload(createUknownUUIDMessage(count.UUID))
 		done(m, 0, "Unknown UUID: \""+count.UUID+"\"")
