@@ -59,31 +59,10 @@ func (c *Counter) Spawn(id int) utils.Composer {
 // bytes on the message (or messages if a batch is received) and send a JSON
 // formatted message to the next component.
 func (c *Counter) OnMessage(m *utils.Message, done utils.Done) {
-	var isTeldat bool
-
 	payload, err := m.PopPayload()
 	if err != nil {
 		done(m, 0, "No payload to produce")
 		return
-	}
-
-	message := make(map[string]interface{})
-	err = json.Unmarshal(payload, &message)
-	if err != nil {
-		done(m, 102, err.Error())
-		return
-	}
-
-	if _, ok := message["product_name"]; ok {
-		isTeldat = true
-	}
-
-	countData := Monitor{
-		Monitor:   "organization_received_bytes",
-		Unit:      "bytes",
-		Value:     uint64(len(payload)),
-		Timestamp: time.Now().Unix(),
-		IsTeldat:  isTeldat,
 	}
 
 	if !m.Opts.Has("uuid") {
@@ -91,9 +70,22 @@ func (c *Counter) OnMessage(m *utils.Message, done utils.Done) {
 		return
 	}
 
+	countData := Monitor{
+		Monitor:   "organization_received_bytes",
+		Unit:      "bytes",
+		Value:     uint64(len(payload)),
+		Timestamp: time.Now().Unix(),
+	}
+
 	if uuid, ok := m.Opts.Get("uuid"); ok {
 		if uuid, ok := uuid.(string); ok {
 			countData.UUID = uuid
+		}
+	}
+
+	if isTeldat, ok := m.Opts.Get("is_teldat"); ok {
+		if isTeldat, ok := isTeldat.(bool); ok {
+			countData.IsTeldat = isTeldat
 		}
 	}
 

@@ -19,6 +19,8 @@
 package main
 
 import (
+	"encoding/json"
+
 	rdkafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/redBorder/events-counter/counter"
 	"github.com/redBorder/events-counter/producer"
@@ -115,10 +117,16 @@ func UUIDCountersPipeline(config *AppConfig) {
 					log.Errorln(event.String())
 
 				case *rdkafka.Message:
+					isTeldat, err := CheckTeldat(event.Value)
+					if err != nil {
+						continue
+					}
+
 					// TODO extract the UUID of the message instead of send generic UUID
 					pipeline.Produce(event.Value, map[string]interface{}{
 						"uuid":        "*",
 						"batch_group": "counter",
+						"is_teldat":   isTeldat,
 					}, nil)
 
 				default:
@@ -131,4 +139,19 @@ func UUIDCountersPipeline(config *AppConfig) {
 		log.Infoln("Kafka UUID consumer finished")
 		wg.Done()
 	}()
+}
+
+// CheckTeldat checks if the message comes from a Teldat sensor
+func CheckTeldat(data []byte) (bool, error) {
+	message := make(map[string]interface{})
+	err := json.Unmarshal(data, message)
+	if err != nil {
+		return false, err
+	}
+
+	if _, ok := message["product_name"]; !ok {
+		return false, nil
+	}
+
+	return true, nil
 }
