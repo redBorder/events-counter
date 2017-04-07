@@ -79,15 +79,6 @@ func main() {
 		log.Fatalln("Error parsing config: " + err.Error())
 	}
 
-	///////////////////
-	// Load license //
-	///////////////////
-
-	limitBytes, err := LoadLicenses(config)
-	if err != nil {
-		log.Fatalln("Error loading licenses: " + err.Error())
-	}
-
 	/////////////////////////////////////////////////
 	// Start the pipeline for accounting messages //
 	/////////////////////////////////////////////////
@@ -98,7 +89,7 @@ func main() {
 	// Start the pipeline for limits reporting //
 	//////////////////////////////////////////////
 
-	CountersMonitor(config, limitBytes)
+	CountersMonitor(config)
 
 	///////////////////
 	// Handle SIGINT //

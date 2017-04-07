@@ -27,14 +27,47 @@ import (
 	"github.com/redBorder/rbforwarder"
 )
 
+var reset = make(chan struct{})
+
 // CountersMonitor starts the pipeline for the monitoring process.
-func CountersMonitor(config *AppConfig, limitBytes int64) {
+func CountersMonitor(config *AppConfig) {
 	log := log.WithField("prefix", "monitor")
 
-	///////////////////////
-	// Monitors Pipeline //
-	///////////////////////
+	wg.Add(1)
+	go func() {
+		for {
+			now := time.Now()
+			intervalEnd := monitor.IntervalEndsAt(
+				config.Monitor.Timer.Period,
+				config.Monitor.Timer.Offset,
+				now)
+			remaining := intervalEnd.Sub(now)
 
+			limitBytes, err := LoadLicenses(config)
+			if err != nil {
+				log.Fatalln("Error loading licenses: " + err.Error())
+			}
+
+			pipeline := BootstrapMonitorPipeline(config, limitBytes)
+			StartConsumingMonitor(pipeline, config)
+
+			log.
+				WithField("Time", intervalEnd.String()).
+				Infof("Next reset set")
+
+			<-time.After(remaining)
+
+			pipeline.Produce(nil, map[string]interface{}{
+				"reset_notification": true,
+			}, nil)
+
+			reset <- struct{}{}
+		}
+	}()
+}
+
+// BootstrapMonitorPipeline bootstrap a RBForwarder pipeline
+func BootstrapMonitorPipeline(config *AppConfig, limitBytes int64) *rbforwarder.RBForwarder {
 	// TODO This only works for one generic UUID
 	limits := map[string]uint64{
 		"*": uint64(limitBytes),
@@ -71,41 +104,16 @@ func CountersMonitor(config *AppConfig, limitBytes int64) {
 		}})
 
 	pipeline.PushComponents(components)
+
+	return pipeline
+}
+
+// StartConsumingMonitor starts receiving kafka messages and sends them to them
+// pipeline
+func StartConsumingMonitor(pipeline *rbforwarder.RBForwarder, config *AppConfig) {
+	log := log.WithField("prefix", "monitor")
+
 	pipeline.Run()
-
-	go func() {
-		for report := range pipeline.GetReports() {
-			if ok := report.(rbforwarder.Report).Code; ok != 0 {
-				log.Errorln("Monitor error: " + report.(rbforwarder.Report).Status)
-			}
-		}
-	}()
-
-	/////////////////////////
-	// Reset notifications //
-	/////////////////////////
-
-	go func() {
-		for {
-			now := time.Now()
-			intervalEnd := monitor.IntervalEndsAt(
-				config.Monitor.Timer.Period,
-				config.Monitor.Timer.Offset,
-				now)
-			remaining := intervalEnd.Sub(now)
-
-			log.Infof("Next reset will occur at: %s", intervalEnd)
-			<-time.After(remaining)
-
-			pipeline.Produce(nil, map[string]interface{}{
-				"reset_notification": true,
-			}, nil)
-		}
-	}()
-
-	/////////////////////////////
-	// Kafka counters consumer //
-	/////////////////////////////
 
 	countersConsumer, err := BootstrapRdKafkaConsumer(
 		config.Monitor.Kafka.Attributes, config.Monitor.Kafka.TopicAttributes)
@@ -115,16 +123,32 @@ func CountersMonitor(config *AppConfig, limitBytes int64) {
 
 	countersConsumer.SubscribeTopics(config.Monitor.Kafka.ReadTopics, nil)
 
-	wg.Add(1)
 	go func() {
-		log.Infof("Started Kafka Counters consumer: (Topics: %v)",
-			config.Monitor.Kafka.ReadTopics)
+		for report := range pipeline.GetReports() {
+			if ok := report.(rbforwarder.Report).Code; ok != 0 {
+				log.Errorln("Monitor error: " + report.(rbforwarder.Report).Status)
+			}
+		}
+	}()
+
+	go func() {
+		log.
+			WithField("Topics", config.Monitor.Kafka.ReadTopics).
+			Infof("Started Kafka Counters consumer")
 
 	receiving:
 		for {
 			select {
 			case <-terminate:
-				log.Debugln("Terminating Kafka counters consumer...")
+				countersConsumer.Close()
+				// Wait for the countersConsumer to be closed or the
+				// app could end without finished the closing action.
+				wg.Done()
+				log.Infoln("Kafka counters consumer finished")
+				break receiving
+
+			case <-reset:
+				countersConsumer.Close()
 				break receiving
 
 			case e := <-countersConsumer.Events():
@@ -148,9 +172,5 @@ func CountersMonitor(config *AppConfig, limitBytes int64) {
 				}
 			}
 		}
-
-		countersConsumer.Close()
-		log.Infoln("Kafka counters consumer finished")
-		wg.Done()
 	}()
 }

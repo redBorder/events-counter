@@ -105,7 +105,9 @@ func LoadLicenses(config *AppConfig) (int64, error) {
 		totalBytes += license.LimitBytes
 	}
 
-	log.Infof(color.GreenString("Total bytes allowed: %d", totalBytes))
+	log.
+		WithField("Total bytes", totalBytes).
+		Infof("Found %d valid licenses", len(licenses))
 
 	return totalBytes, nil
 }
