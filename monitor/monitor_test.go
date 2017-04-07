@@ -166,11 +166,8 @@ func TestMonitor(t *testing.T) {
 			Convey("Should discard the message", func() {
 				d := new(Doner)
 				d.doneCalled = make(chan *utils.Message, 1)
-				d.On(
-					"Done",
-					mock.AnythingOfType("*utils.Message"),
-					0,
-					"Ignore non \"organization_received_bytes\" message",
+				d.On("Done",
+					mock.AnythingOfType("*utils.Message"), 0, mock.AnythingOfType("string"),
 				)
 
 				monitor.OnMessage(message, d.Done)
@@ -191,7 +188,7 @@ func TestMonitor(t *testing.T) {
 			Convey("Should error", func() {
 				d := new(Doner)
 				d.doneCalled = make(chan *utils.Message, 1)
-				d.On("Done", mock.AnythingOfType("*utils.Message"), 101, "Can't decode JSON counter")
+				d.On("Done", mock.AnythingOfType("*utils.Message"), 0, mock.AnythingOfType("string"))
 
 				monitor.OnMessage(message, d.Done)
 				result := <-d.doneCalled

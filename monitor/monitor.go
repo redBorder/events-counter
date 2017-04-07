@@ -19,21 +19,17 @@
 package monitor
 
 import (
-	"encoding/json"
-
 	"github.com/benbjohnson/clock"
 	"github.com/redBorder/rbforwarder/utils"
 )
 
 type logger interface {
 	Debugf(format string, args ...interface{})
-	Infof(format string, args ...interface{})
 }
 
 type nullLogger struct{}
 
 func (n *nullLogger) Debugf(format string, args ...interface{}) {}
-func (n *nullLogger) Infof(format string, args ...interface{})  {}
 
 // Config contains the configuration for a Monitor.
 type Config struct {
@@ -83,7 +79,6 @@ func (mon *CountersMonitor) OnMessage(m *utils.Message, done utils.Done) {
 		ok      bool
 		payload []byte
 		err     error
-		count   Count
 		bytes   uint64
 	)
 
@@ -103,13 +98,9 @@ func (mon *CountersMonitor) OnMessage(m *utils.Message, done utils.Done) {
 		return
 	}
 
-	if err = json.Unmarshal(payload, &count); err != nil {
-		done(m, 101, "Can't decode JSON counter")
-		return
-	}
-
-	if count.Monitor != "organization_received_bytes" {
-		done(m, 0, "Ignore non \"organization_received_bytes\" message")
+	count := ParseCount(payload)
+	if count == nil {
+		done(m, 0, "Not counter message")
 		return
 	}
 

@@ -130,3 +130,53 @@ func IntervalEndsAt(period, offset int64, now time.Time) time.Time {
 
 	return time.Unix(intervalEnd, 0)
 }
+
+// ParseCount gets a json as a map and returns a struc with the values
+func ParseCount(data []byte) *Count {
+	var ok bool
+
+	count := &Count{}
+	msg := make(map[string]interface{})
+	if err := json.Unmarshal(data, &msg); err != nil {
+		return nil
+	}
+
+	monitor, ok := msg["monitor"]
+	if !ok {
+		return nil
+	}
+
+	if count.Monitor, ok = monitor.(string); !ok ||
+		count.Monitor != "organization_received_bytes" {
+		return nil
+	}
+
+	if uuid, ok := msg["uuid"]; ok {
+		if count.UUID, ok = uuid.(string); !ok {
+			return nil
+		}
+	}
+	if value, ok := msg["value"]; ok {
+		floatValue, ok := value.(float64)
+		if !ok {
+			return nil
+		}
+
+		count.Value = uint64(floatValue)
+	}
+	if timestamp, ok := msg["timestamp"]; ok {
+		floatTimestamp, ok := timestamp.(float64)
+		if !ok {
+			return nil
+		}
+
+		count.Timestamp = int64(floatTimestamp)
+	}
+	if isTeldat, ok := msg["is_teldat"]; ok {
+		if count.IsTeldat, ok = isTeldat.(bool); !ok {
+			return nil
+		}
+	}
+
+	return count
+}

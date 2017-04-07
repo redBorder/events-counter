@@ -20,12 +20,12 @@ package monitor
 
 // Count contains the info about a group of messages
 type Count struct {
-	Monitor   string `json:"monitor"`
-	Unit      string `json:"unit"`
-	Value     uint64 `json:"value"`
-	UUID      string `json:"uuid"`
-	Timestamp int64  `json:"timestamp"`
-	IsTeldat  bool   `json:"is_teldat"`
+	Monitor   string
+	Unit      string
+	Value     uint64
+	UUID      string
+	Timestamp int64
+	IsTeldat  bool
 }
 
 // Alert contains the information abot a message alerting that the

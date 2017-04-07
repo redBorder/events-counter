@@ -123,11 +123,19 @@ func UUIDCountersPipeline(config *AppConfig) {
 					}
 
 					// TODO extract the UUID of the message instead of send generic UUID
-					pipeline.Produce(event.Value, map[string]interface{}{
-						"uuid":        "*",
-						"batch_group": "counter",
-						"is_teldat":   isTeldat,
-					}, nil)
+					if isTeldat {
+						pipeline.Produce(event.Value, map[string]interface{}{
+							"uuid":        "*",
+							"batch_group": "teldat",
+							"is_teldat":   true,
+						}, nil)
+					} else {
+						pipeline.Produce(event.Value, map[string]interface{}{
+							"uuid":        "*",
+							"batch_group": "generic",
+							"is_teldat":   false,
+						}, nil)
+					}
 
 				default:
 					log.Debugln(e.String())
@@ -144,7 +152,7 @@ func UUIDCountersPipeline(config *AppConfig) {
 // CheckTeldat checks if the message comes from a Teldat sensor
 func CheckTeldat(data []byte) (bool, error) {
 	message := make(map[string]interface{})
-	err := json.Unmarshal(data, message)
+	err := json.Unmarshal(data, &message)
 	if err != nil {
 		return false, err
 	}
