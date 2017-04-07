@@ -56,14 +56,6 @@ type AppConfig struct {
 	}
 
 	LicensesDirectory string `yaml:"licenses_directory" mandatory:"true"`
-
-	Licenses []struct {
-		UUID        string         `json:"uuid"`
-		ExpireAt    int64          `json:"expire_at"`
-		LimitBytes  int64          `json:"limit_bytes"`
-		ClusterUUID string         `json:"cluster_uuid"`
-		Sensors     map[string]int `json:"sensors"`
-	}
 }
 
 // verify checks for fields with "mandatory" struc tag set to "true" and if
