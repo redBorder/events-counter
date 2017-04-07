@@ -17,7 +17,7 @@ numer of messages).
 
 Messages are expected to be on JSON format when counting messages.
 
-`events-counters` has two independent modules:
+`events-counter` has two independent modules:
 
 - **UUIDCounter**
   - Reads messages from a set of input topics.
@@ -28,6 +28,27 @@ Messages are expected to be on JSON format when counting messages.
   - The input topic of the counter monitor is the output topic of the UUIDCounter.
   - Reads messages with the account of bytes. Discards old messages.
   - If the number of total bytes exceeds the limit sends an alert.
+
+`events-counter` ignores Teldat sensors traffic, so these kind of sensors can
+send an unlimited amount of bytes.  
+
+## License
+
+`events-counter` limits can't be configured. These limits are loaded from a
+LICENSE file. These licenses must be signed to be considered a valid license. Also, a
+license has an expiration time and it won't be considered valid after
+the expiration time.
+
+The public key used to verify the license should be specified at compile time
+and can't be modified once the binary is compiled. To specify the public key,
+the application should be compiled like this:
+
+```bash
+export PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCqGKukO1De7zhZj6+H0qtjTkVxwTCpvKe4eCZ0\nFPqri0cb2JZfXJ/DgYSF6vUpwmJG8wVQZKjeGcjDOL5UlsuusFncCzWBQ7RKNUSesmQRMSGkVb1/\n3j+skZ6UtW+5u09lHNsj6tQ51s1SPrCBkedbNf0Tp0GbMJDyR4e9T04ZZwIDAQAB\n-----END PUBLIC KEY-----"
+make
+```
+
+_**Note** that every line break should be **replaced** by "\n"_
 
 ## Installing
 
@@ -97,4 +118,6 @@ monitor:
       bootstrap.servers: "kafka:9092"
       enable.auto.commit: "false"        # IMPORTANT: Should be set to false
       group.id: "monitor"
+
+licenses_directory": /etc/licenses       # Path to the directory where licenses are stored
 ```
