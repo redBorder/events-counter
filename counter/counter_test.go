@@ -65,7 +65,7 @@ func TestCounter(t *testing.T) {
 				So(monitor.Monitor, ShouldEqual, "organization_received_bytes")
 				So(monitor.Unit, ShouldEqual, "bytes")
 				So(monitor.Value, ShouldEqual, 41)
-				So(monitor.IsTeldat, ShouldBeFalse)
+				// So(monitor.IsTeldat, ShouldBeFalse)
 
 				d.AssertExpectations(t)
 			})
@@ -93,24 +93,16 @@ func TestCounter(t *testing.T) {
 			message.Opts.Set("uuid", "test_uuid")
 			message.Opts.Set("is_teldat", true)
 
-			Convey("Should be marked as a Teldat sensor", func() {
+			Convey("Should not produce a count message", func() {
 				d := new(Doner)
 				d.doneCalled = make(chan *utils.Message, 1)
-				d.On("Done", mock.AnythingOfType("*utils.Message"), 0, "")
+				d.On("Done", mock.AnythingOfType("*utils.Message"), 0, mock.AnythingOfType("string"))
 
 				counter.OnMessage(message, d.Done)
 				result := <-d.doneCalled
 				payload, err := result.PopPayload()
-				So(err, ShouldBeNil)
-
-				monitor := Monitor{}
-				err = json.Unmarshal(payload, &monitor)
-				So(err, ShouldBeNil)
-
-				So(monitor.Monitor, ShouldEqual, "organization_received_bytes")
-				So(monitor.Unit, ShouldEqual, "bytes")
-				So(monitor.Value, ShouldEqual, 41)
-				So(monitor.IsTeldat, ShouldBeTrue)
+				So(err.Error(), ShouldEqual, "No payload available")
+				So(payload, ShouldBeNil)
 
 				d.AssertExpectations(t)
 			})
