@@ -40,7 +40,10 @@ var (
 var log = logrus.New()
 
 func init() {
-	log.Formatter = &prefixed.TextFormatter{}
+	log.Formatter = &prefixed.TextFormatter{
+		ForceColors:      true,
+		DisableTimestamp: true,
+	}
 
 	versionFlag := flag.Bool("version", false, "Show version info")
 	debugFlag := flag.Bool("debug", false, "Show debug info")
