@@ -28,11 +28,11 @@ import (
 // Monitor contains the data for generate a JSON with the count of bytes/messages
 type Monitor struct {
 	Monitor   string `json:"monitor"`
-	Type      string `json:"type"`
 	Unit      string `json:"unit"`
 	Value     uint64 `json:"value"`
 	UUID      string `json:"uuid"`
 	Timestamp int64  `json:"timestamp"`
+	// IsTeldat  bool   `json:"is_teldat"`
 }
 
 // Config contains the configuration for a Counter
@@ -65,22 +65,30 @@ func (c *Counter) OnMessage(m *utils.Message, done utils.Done) {
 		return
 	}
 
-	countData := Monitor{
-		Monitor:   "data",
-		Type:      "counter",
-		Unit:      "bytes",
-		Value:     uint64(len(payload)),
-		Timestamp: time.Now().Unix(),
-	}
-
 	if !m.Opts.Has("uuid") {
 		done(m, 101, "No uuid found")
 		return
 	}
 
+	countData := Monitor{
+		Monitor:   "organization_received_bytes",
+		Unit:      "bytes",
+		Value:     uint64(len(payload)),
+		Timestamp: time.Now().Unix(),
+	}
+
 	if uuid, ok := m.Opts.Get("uuid"); ok {
 		if uuid, ok := uuid.(string); ok {
 			countData.UUID = uuid
+		}
+	}
+
+	if isTeldat, ok := m.Opts.Get("is_teldat"); ok {
+		if isTeldat, ok := isTeldat.(bool); ok {
+			if isTeldat {
+				done(m, 0, "Ignore Teldat")
+				return
+			}
 		}
 	}
 

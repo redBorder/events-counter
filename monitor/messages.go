@@ -20,12 +20,12 @@ package monitor
 
 // Count contains the info about a group of messages
 type Count struct {
-	Monitor   string `json:"monitor"`
-	Type      string `json:"type"`
-	Unit      string `json:"unit"`
-	Value     uint64 `json:"value"`
-	UUID      string `json:"uuid"`
-	Timestamp int64  `json:"timestamp"`
+	Monitor   string
+	Unit      string
+	Value     uint64
+	UUID      string
+	Timestamp int64
+	IsTeldat  bool
 }
 
 // Alert contains the information abot a message alerting that the
@@ -35,6 +35,6 @@ type Alert struct {
 	Type         string `json:"type"`
 	UUID         string `json:"uuid,omitempty"`
 	CurrentBytes uint64 `json:"current_bytes,omitempty"`
-	Limit        uint64 `json:"limit,omitempty"`
+	Limit        uint64 `json:"limit"`
 	Timestamp    int64  `json:"timestamp"`
 }

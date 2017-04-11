@@ -19,12 +19,17 @@
 package monitor
 
 import (
-	"encoding/json"
-
-	"github.com/Sirupsen/logrus"
 	"github.com/benbjohnson/clock"
 	"github.com/redBorder/rbforwarder/utils"
 )
+
+type logger interface {
+	Debugf(format string, args ...interface{})
+}
+
+type nullLogger struct{}
+
+func (n *nullLogger) Debugf(format string, args ...interface{}) {}
 
 // Config contains the configuration for a Monitor.
 type Config struct {
@@ -32,7 +37,9 @@ type Config struct {
 	Period  int64
 	Offset  int64
 	Workers int
-	clk     clock.Clock
+	Log     logger
+
+	clk clock.Clock
 }
 
 // CountersMonitor process count messages and check if the maximum of allowed messages
@@ -53,6 +60,9 @@ func (mon *CountersMonitor) Spawn(id int) utils.Composer {
 	if monitor.clk == nil {
 		monitor.clk = clock.New()
 	}
+	if monitor.Log == nil {
+		monitor.Log = new(nullLogger)
+	}
 	monitor.db = bootstrapDB(mon.Limits)
 	return monitor
 }
@@ -69,7 +79,6 @@ func (mon *CountersMonitor) OnMessage(m *utils.Message, done utils.Done) {
 		ok      bool
 		payload []byte
 		err     error
-		count   Count
 		bytes   uint64
 	)
 
@@ -79,7 +88,7 @@ func (mon *CountersMonitor) OnMessage(m *utils.Message, done utils.Done) {
 		}
 
 		m.PushPayload(createResetNotificationMessage())
-		logrus.Info("Sending reset notification")
+		mon.Log.Debugf("Sending reset notification")
 		done(m, 0, "Reset notification")
 		return
 	}
@@ -89,13 +98,19 @@ func (mon *CountersMonitor) OnMessage(m *utils.Message, done utils.Done) {
 		return
 	}
 
-	if err = json.Unmarshal(payload, &count); err != nil {
-		done(m, 101, "Can't decode JSON counter")
+	count := ParseCount(payload)
+	if count == nil {
+		done(m, 0, "Not counter message")
 		return
 	}
 
 	if ok = belongsToInterval(count.Timestamp, mon.Period, mon.Offset, mon.clk.Now().Unix()); !ok {
 		done(m, 0, "Message too old")
+		return
+	}
+
+	if count.IsTeldat {
+		done(m, 0, "Teldat sensor")
 		return
 	}
 
@@ -112,7 +127,7 @@ func (mon *CountersMonitor) OnMessage(m *utils.Message, done utils.Done) {
 		return
 	}
 
-	logrus.Debugf("Sensor %s has reached the limit (%d)", count.UUID, bytes)
+	mon.Log.Debugf("Sensor %s has reached the limit (%d)", count.UUID, bytes)
 	m.PushPayload(
 		createLimitReachedMessage(count.UUID, bytes, mon.Limits[count.UUID], mon.clk.Now().Unix()),
 	)

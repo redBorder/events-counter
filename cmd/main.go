@@ -26,6 +26,7 @@ import (
 	"sync"
 
 	"github.com/Sirupsen/logrus"
+	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 )
 
 var (
@@ -36,7 +37,14 @@ var (
 	terminate = make(chan struct{})
 )
 
+var log = logrus.New()
+
 func init() {
+	log.Formatter = &prefixed.TextFormatter{
+		ForceColors:      true,
+		DisableTimestamp: true,
+	}
+
 	versionFlag := flag.Bool("version", false, "Show version info")
 	debugFlag := flag.Bool("debug", false, "Show debug info")
 	configFlag := flag.String("config", "", "Application configuration file")
@@ -53,7 +61,7 @@ func init() {
 	}
 
 	if *debugFlag {
-		logrus.SetLevel(logrus.DebugLevel)
+		log.Level = logrus.DebugLevel
 	}
 
 	configFile = *configFlag
@@ -66,12 +74,12 @@ func main() {
 
 	rawConfig, err := ioutil.ReadFile(configFile)
 	if err != nil {
-		logrus.Fatalln("Error reading config file: " + err.Error())
+		log.Fatalln("Error reading config file: " + err.Error())
 	}
 
 	config, err := ParseConfig(rawConfig)
 	if err != nil {
-		logrus.Fatalln("Error parsing config: " + err.Error())
+		log.Fatalln("Error parsing config: " + err.Error())
 	}
 
 	/////////////////////////////////////////////////
@@ -103,5 +111,5 @@ func main() {
 	/////////////
 
 	wg.Wait()
-	logrus.Infoln("Bye bye...")
+	log.Infoln("Bye bye...")
 }

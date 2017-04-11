@@ -21,14 +21,21 @@ package main
 import (
 	"fmt"
 	"runtime"
+	"strings"
 
 	rdkafka "github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/redBorder/rbforwarder"
 )
 
 // PrintVersion displays the application version.
 func PrintVersion() {
 	_, s := rdkafka.LibraryVersion()
-	fmt.Printf("Events Counter\t:: %s\n", version)
-	fmt.Printf("Go\t\t:: %s\n", runtime.Version())
-	fmt.Printf("librdkafka\t:: %s\n", s)
+	prettyPubKey := strings.Replace(PubKey, `\n`, "\n", -1)
+
+	fmt.Printf("Events Counter :: %s\n", version)
+	fmt.Printf("rbforwarder    :: %s\n", rbforwarder.Version)
+	fmt.Printf("Go             :: %s\n", runtime.Version())
+	fmt.Printf("librdkafka     :: %s\n", s)
+	fmt.Println()
+	fmt.Println(prettyPubKey)
 }
