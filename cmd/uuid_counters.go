@@ -129,6 +129,9 @@ func UUIDCountersPipeline(config *AppConfig) {
 					}
 
 					pipeline.Produce(event.Value, map[string]interface{}{
+						// NOTE batch_group and uuid should be the same to ensure that
+						// messages from the same organization are grouped together when
+						// they are counted.
 						"uuid":        org,
 						"batch_group": org,
 					}, nil)

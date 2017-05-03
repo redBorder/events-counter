@@ -56,6 +56,7 @@ type AppConfig struct {
 	}
 
 	LicensesDirectory string `yaml:"licenses_directory" mandatory:"true"`
+	OrganizationMode  bool   `yaml:"organization_mode"`
 }
 
 // verify checks for fields with "mandatory" struc tag set to "true" and if
