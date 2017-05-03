@@ -25,7 +25,6 @@ type Count struct {
 	Value     uint64
 	UUID      string
 	Timestamp int64
-	IsTeldat  bool
 }
 
 // Alert contains the information abot a message alerting that the

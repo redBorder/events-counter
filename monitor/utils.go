@@ -131,7 +131,7 @@ func IntervalEndsAt(period, offset int64, now time.Time) time.Time {
 	return time.Unix(intervalEnd, 0)
 }
 
-// ParseCount gets a json as a map and returns a struc with the values
+// ParseCount gets a json as a map and returns a struct with the values
 func ParseCount(data []byte) *Count {
 	var ok bool
 
@@ -171,11 +171,6 @@ func ParseCount(data []byte) *Count {
 		}
 
 		count.Timestamp = int64(floatTimestamp)
-	}
-	if isTeldat, ok := msg["is_teldat"]; ok {
-		if count.IsTeldat, ok = isTeldat.(bool); !ok {
-			return nil
-		}
 	}
 
 	return count
