@@ -118,7 +118,7 @@ func UUIDCountersPipeline(config *AppConfig) {
 					log.Errorln(event.String())
 
 				case *rdkafka.Message:
-					isTeldat, org, err := checkMessage(event.Value)
+					isTeldat, org, err := checkMessage(config, event.Value)
 					if err != nil {
 						log.Warn(err)
 						continue
@@ -148,10 +148,20 @@ func UUIDCountersPipeline(config *AppConfig) {
 	}()
 }
 
-func checkMessage(message []byte) (isTeldat bool, org string, err error) {
+func checkMessage(config *AppConfig, message []byte) (
+	isTeldat bool, org string, err error) {
 	parsed := make(map[string]interface{})
 	err = json.Unmarshal(message, &parsed)
 	if err != nil {
+		return
+	}
+
+	if _, ok := parsed["product_name"]; ok {
+		isTeldat = true
+	}
+
+	if !config.OrganizationMode {
+		org = "*"
 		return
 	}
 
@@ -161,10 +171,6 @@ func checkMessage(message []byte) (isTeldat bool, org string, err error) {
 			err = errors.New("Field 'organization_uuid' is not string")
 			return
 		}
-	}
-
-	if _, ok := parsed["product_name"]; ok {
-		isTeldat = true
 	}
 
 	return
