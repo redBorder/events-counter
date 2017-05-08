@@ -119,5 +119,6 @@ monitor:
       enable.auto.commit: "false"        # IMPORTANT: Should be set to false
       group.id: "monitor"
 
-licenses_directory": /etc/licenses       # Path to the directory where licenses are stored
+licenses_directory: /etc/licenses       # Path to the directory where licenses are stored
+organization_mode: false                # Ignore organization_uuid. Count every message as belonging to org "*"
 ```
