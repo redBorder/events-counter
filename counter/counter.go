@@ -30,7 +30,7 @@ type Monitor struct {
 	Monitor   string `json:"monitor"`
 	Unit      string `json:"unit"`
 	Value     uint64 `json:"value"`
-	UUID      string `json:"uuid"`
+	UUID      string `json:"organization_uuid"`
 	Timestamp int64  `json:"timestamp"`
 }
 

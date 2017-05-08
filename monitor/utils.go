@@ -151,7 +151,7 @@ func ParseCount(data []byte) *Count {
 		return nil
 	}
 
-	if uuid, ok := msg["uuid"]; ok {
+	if uuid, ok := msg["organization_uuid"]; ok {
 		if count.UUID, ok = uuid.(string); !ok {
 			return nil
 		}

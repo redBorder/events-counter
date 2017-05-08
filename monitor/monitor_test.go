@@ -99,7 +99,7 @@ func TestMonitor(t *testing.T) {
 					"monitor":"organization_received_bytes",
 					"unit":"bytes",
 					"value":10,
-					"uuid":"unknown",
+					"organization_uuid":"unknown",
 					"timestamp":643975200
 				}
 			`))
@@ -107,7 +107,8 @@ func TestMonitor(t *testing.T) {
 			Convey("Should alert the unknown UUID", func() {
 				d := new(Doner)
 				d.doneCalled = make(chan *utils.Message, 1)
-				d.On("Done", mock.AnythingOfType("*utils.Message"), 0, "Unknown UUID: \"unknown\"")
+				d.On("Done", mock.AnythingOfType(
+					"*utils.Message"), 0, mock.AnythingOfType("string"))
 
 				monitor.OnMessage(message, d.Done)
 				result := <-d.doneCalled
@@ -232,7 +233,7 @@ func TestMonitorReset(t *testing.T) {
 					"monitor":"organization_received_bytes",
 					"unit":"bytes",
 					"value":51,
-					"uuid":"my_uuid",
+					"organization_uuid":"my_uuid",
 					"timestamp":643975200
 					}`))
 
@@ -255,7 +256,7 @@ func TestMonitorReset(t *testing.T) {
 					"monitor":"organization_received_bytes",
 					"unit":"bytes",
 					"value":51,
-					"uuid":"my_uuid",
+					"organization_uuid":"my_uuid",
 					"timestamp":643975200
 					}`))
 
@@ -317,7 +318,7 @@ func TestMonitorReset(t *testing.T) {
 						"monitor":"organization_received_bytes",
 						"unit":"bytes",
 						"value":51,
-						"uuid":"my_uuid",
+						"organization_uuid":"my_uuid",
 						"timestamp":643975200
 						}`))
 
