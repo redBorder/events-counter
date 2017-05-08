@@ -67,12 +67,7 @@ func CountersMonitor(config *AppConfig) {
 }
 
 // BootstrapMonitorPipeline bootstrap a RBForwarder pipeline
-func BootstrapMonitorPipeline(config *AppConfig, limitBytes int64) *rbforwarder.RBForwarder {
-	// TODO This only works for one generic UUID
-	limits := map[string]uint64{
-		"*": uint64(limitBytes),
-	}
-
+func BootstrapMonitorPipeline(config *AppConfig, limits LimitBytes) *rbforwarder.RBForwarder {
 	p, err := BootstrapRdKafkaProducer(config.Monitor.Kafka.Attributes)
 	if err != nil {
 		log.Fatal("Error creating monitor producer: " + err.Error())
