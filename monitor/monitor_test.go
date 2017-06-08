@@ -288,6 +288,7 @@ func TestMonitorReset(t *testing.T) {
 			Convey("Should send a reset notification", func() {
 				message := utils.NewMessage()
 				message.Opts.Set("reset_notification", nil)
+				message.Opts.Set("organization_uuid", "my_uuid")
 
 				d := new(Doner)
 				d.doneCalled = make(chan *utils.Message, 1)
@@ -304,6 +305,7 @@ func TestMonitorReset(t *testing.T) {
 				So(err, ShouldBeNil)
 				So(response["monitor"], ShouldEqual, "alert")
 				So(response["type"], ShouldEqual, "counters_reset")
+				So(response["uuid"], ShouldEqual, "my_uuid")
 
 				bytes := monitor.(*CountersMonitor).db["my_uuid"]
 				So(bytes, ShouldEqual, 0)
