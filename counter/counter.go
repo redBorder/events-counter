@@ -30,9 +30,8 @@ type Monitor struct {
 	Monitor   string `json:"monitor"`
 	Unit      string `json:"unit"`
 	Value     uint64 `json:"value"`
-	UUID      string `json:"uuid"`
+	UUID      string `json:"organization_uuid"`
 	Timestamp int64  `json:"timestamp"`
-	// IsTeldat  bool   `json:"is_teldat"`
 }
 
 // Config contains the configuration for a Counter
@@ -80,15 +79,6 @@ func (c *Counter) OnMessage(m *utils.Message, done utils.Done) {
 	if uuid, ok := m.Opts.Get("uuid"); ok {
 		if uuid, ok := uuid.(string); ok {
 			countData.UUID = uuid
-		}
-	}
-
-	if isTeldat, ok := m.Opts.Get("is_teldat"); ok {
-		if isTeldat, ok := isTeldat.(bool); ok {
-			if isTeldat {
-				done(m, 0, "Ignore Teldat")
-				return
-			}
 		}
 	}
 

@@ -99,7 +99,7 @@ func TestMonitor(t *testing.T) {
 					"monitor":"organization_received_bytes",
 					"unit":"bytes",
 					"value":10,
-					"uuid":"unknown",
+					"organization_uuid":"unknown",
 					"timestamp":643975200
 				}
 			`))
@@ -107,7 +107,8 @@ func TestMonitor(t *testing.T) {
 			Convey("Should alert the unknown UUID", func() {
 				d := new(Doner)
 				d.doneCalled = make(chan *utils.Message, 1)
-				d.On("Done", mock.AnythingOfType("*utils.Message"), 0, "Unknown UUID: \"unknown\"")
+				d.On("Done", mock.AnythingOfType(
+					"*utils.Message"), 0, mock.AnythingOfType("string"))
 
 				monitor.OnMessage(message, d.Done)
 				result := <-d.doneCalled
@@ -121,33 +122,6 @@ func TestMonitor(t *testing.T) {
 				So(response["monitor"], ShouldEqual, "alert")
 				So(response["type"], ShouldEqual, "unknown_uuid")
 				So(response["uuid"], ShouldEqual, "unknown")
-				d.AssertExpectations(t)
-			})
-		})
-
-		Convey("When a message is received from a Teldat sensor", func() {
-			message := utils.NewMessage()
-			message.PushPayload([]byte(`
-				{
-					"monitor":"organization_received_bytes",
-					"unit":"bytes",
-					"value":10,
-					"uuid":"*",
-					"timestamp":643975200,
-					"is_teldat":true
-				}
-			`))
-
-			Convey("Should ignore the message", func() {
-				d := new(Doner)
-				d.doneCalled = make(chan *utils.Message, 1)
-				d.On("Done", mock.AnythingOfType("*utils.Message"), 0, mock.AnythingOfType("string"))
-
-				monitor.OnMessage(message, d.Done)
-				result := <-d.doneCalled
-				_, err := result.PopPayload()
-				So(err, ShouldNotBeNil)
-
 				d.AssertExpectations(t)
 			})
 		})
@@ -259,7 +233,7 @@ func TestMonitorReset(t *testing.T) {
 					"monitor":"organization_received_bytes",
 					"unit":"bytes",
 					"value":51,
-					"uuid":"my_uuid",
+					"organization_uuid":"my_uuid",
 					"timestamp":643975200
 					}`))
 
@@ -282,7 +256,7 @@ func TestMonitorReset(t *testing.T) {
 					"monitor":"organization_received_bytes",
 					"unit":"bytes",
 					"value":51,
-					"uuid":"my_uuid",
+					"organization_uuid":"my_uuid",
 					"timestamp":643975200
 					}`))
 
@@ -314,6 +288,7 @@ func TestMonitorReset(t *testing.T) {
 			Convey("Should send a reset notification", func() {
 				message := utils.NewMessage()
 				message.Opts.Set("reset_notification", nil)
+				message.Opts.Set("organization_uuid", "my_uuid")
 
 				d := new(Doner)
 				d.doneCalled = make(chan *utils.Message, 1)
@@ -330,6 +305,7 @@ func TestMonitorReset(t *testing.T) {
 				So(err, ShouldBeNil)
 				So(response["monitor"], ShouldEqual, "alert")
 				So(response["type"], ShouldEqual, "counters_reset")
+				So(response["uuid"], ShouldEqual, "my_uuid")
 
 				bytes := monitor.(*CountersMonitor).db["my_uuid"]
 				So(bytes, ShouldEqual, 0)
@@ -344,7 +320,7 @@ func TestMonitorReset(t *testing.T) {
 						"monitor":"organization_received_bytes",
 						"unit":"bytes",
 						"value":51,
-						"uuid":"my_uuid",
+						"organization_uuid":"my_uuid",
 						"timestamp":643975200
 						}`))
 

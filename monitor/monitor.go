@@ -83,11 +83,10 @@ func (mon *CountersMonitor) OnMessage(m *utils.Message, done utils.Done) {
 	)
 
 	if _, ok = m.Opts.Get("reset_notification"); ok {
-		for k := range mon.db {
-			mon.db[k] = 0
-		}
+		org, _ := m.Opts.Get("organization_uuid")
+		mon.db[org.(string)] = 0
 
-		m.PushPayload(createResetNotificationMessage())
+		m.PushPayload(createResetNotificationMessage(org.(string)))
 		mon.Log.Debugf("Sending reset notification")
 		done(m, 0, "Reset notification")
 		return
@@ -106,11 +105,6 @@ func (mon *CountersMonitor) OnMessage(m *utils.Message, done utils.Done) {
 
 	if ok = belongsToInterval(count.Timestamp, mon.Period, mon.Offset, mon.clk.Now().Unix()); !ok {
 		done(m, 0, "Message too old")
-		return
-	}
-
-	if count.IsTeldat {
-		done(m, 0, "Teldat sensor")
 		return
 	}
 

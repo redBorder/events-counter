@@ -57,9 +57,14 @@ func CountersMonitor(config *AppConfig) {
 
 			<-time.After(remaining)
 
-			pipeline.Produce(nil, map[string]interface{}{
-				"reset_notification": true,
-			}, nil)
+			for org, bytes := range limitBytes {
+				if bytes > 0 {
+					pipeline.Produce(nil, map[string]interface{}{
+						"reset_notification": true,
+						"organization_uuid":  org,
+					}, nil)
+				}
+			}
 
 			reset <- struct{}{}
 		}
@@ -67,12 +72,7 @@ func CountersMonitor(config *AppConfig) {
 }
 
 // BootstrapMonitorPipeline bootstrap a RBForwarder pipeline
-func BootstrapMonitorPipeline(config *AppConfig, limitBytes int64) *rbforwarder.RBForwarder {
-	// TODO This only works for one generic UUID
-	limits := map[string]uint64{
-		"*": uint64(limitBytes),
-	}
-
+func BootstrapMonitorPipeline(config *AppConfig, limits LimitBytes) *rbforwarder.RBForwarder {
 	p, err := BootstrapRdKafkaProducer(config.Monitor.Kafka.Attributes)
 	if err != nil {
 		log.Fatal("Error creating monitor producer: " + err.Error())

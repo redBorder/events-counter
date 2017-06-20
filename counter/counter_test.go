@@ -87,27 +87,6 @@ func TestCounter(t *testing.T) {
 			})
 		})
 
-		Convey("When a message from a Teldat sensor is received is received", func() {
-			message := utils.NewMessage()
-			message.PushPayload([]byte(`{"message": "Lorem ipsum dolor sit amet"}`))
-			message.Opts.Set("uuid", "test_uuid")
-			message.Opts.Set("is_teldat", true)
-
-			Convey("Should not produce a count message", func() {
-				d := new(Doner)
-				d.doneCalled = make(chan *utils.Message, 1)
-				d.On("Done", mock.AnythingOfType("*utils.Message"), 0, mock.AnythingOfType("string"))
-
-				counter.OnMessage(message, d.Done)
-				result := <-d.doneCalled
-				payload, err := result.PopPayload()
-				So(err.Error(), ShouldEqual, "No payload available")
-				So(payload, ShouldBeNil)
-
-				d.AssertExpectations(t)
-			})
-		})
-
 		Convey("When a message without payload is received", func() {
 			message := utils.NewMessage()
 

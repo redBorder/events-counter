@@ -20,6 +20,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 
 	rdkafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/redBorder/events-counter/counter"
@@ -117,25 +118,23 @@ func UUIDCountersPipeline(config *AppConfig) {
 					log.Errorln(event.String())
 
 				case *rdkafka.Message:
-					isTeldat, err := CheckTeldat(event.Value)
+					isTeldat, org, err := checkMessage(config, event.Value)
 					if err != nil {
+						log.Warn(err)
 						continue
 					}
 
-					// TODO extract the UUID of the message instead of send generic UUID
 					if isTeldat {
-						pipeline.Produce(event.Value, map[string]interface{}{
-							"uuid":        "*",
-							"batch_group": "teldat",
-							"is_teldat":   true,
-						}, nil)
-					} else {
-						pipeline.Produce(event.Value, map[string]interface{}{
-							"uuid":        "*",
-							"batch_group": "generic",
-							"is_teldat":   false,
-						}, nil)
+						continue
 					}
+
+					pipeline.Produce(event.Value, map[string]interface{}{
+						// NOTE batch_group and uuid should be the same to ensure that
+						// messages from the same organization are grouped together when
+						// they are counted.
+						"uuid":        org,
+						"batch_group": org,
+					}, nil)
 
 				default:
 					log.Debugln(e.String())
@@ -149,17 +148,30 @@ func UUIDCountersPipeline(config *AppConfig) {
 	}()
 }
 
-// CheckTeldat checks if the message comes from a Teldat sensor
-func CheckTeldat(data []byte) (bool, error) {
-	message := make(map[string]interface{})
-	err := json.Unmarshal(data, &message)
+func checkMessage(config *AppConfig, message []byte) (
+	isTeldat bool, org string, err error) {
+	parsed := make(map[string]interface{})
+	err = json.Unmarshal(message, &parsed)
 	if err != nil {
-		return false, err
+		return
 	}
 
-	if _, ok := message["product_name"]; !ok {
-		return false, nil
+	if _, ok := parsed["product_name"]; ok {
+		isTeldat = true
 	}
 
-	return true, nil
+	if !config.OrganizationMode {
+		org = "*"
+		return
+	}
+
+	if orgIf, ok := parsed["organization_uuid"]; ok {
+		org, ok = orgIf.(string)
+		if !ok {
+			err = errors.New("Field 'organization_uuid' is not string")
+			return
+		}
+	}
+
+	return
 }

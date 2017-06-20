@@ -70,12 +70,13 @@ func createUknownUUIDMessage(uuid string) []byte {
 
 // createUknownUUIDMessage builds a JSON message alerting that an UUID does
 // not exists on the internal database.
-func createResetNotificationMessage() []byte {
+func createResetNotificationMessage(org string) []byte {
 	var data []byte
 
 	alert := &Alert{
-		Monitor:   "alert",
 		Timestamp: time.Now().Unix(),
+		Monitor:   "alert",
+		UUID:      org,
 		Type:      "counters_reset",
 	}
 
@@ -131,7 +132,7 @@ func IntervalEndsAt(period, offset int64, now time.Time) time.Time {
 	return time.Unix(intervalEnd, 0)
 }
 
-// ParseCount gets a json as a map and returns a struc with the values
+// ParseCount gets a json as a map and returns a struct with the values
 func ParseCount(data []byte) *Count {
 	var ok bool
 
@@ -151,7 +152,7 @@ func ParseCount(data []byte) *Count {
 		return nil
 	}
 
-	if uuid, ok := msg["uuid"]; ok {
+	if uuid, ok := msg["organization_uuid"]; ok {
 		if count.UUID, ok = uuid.(string); !ok {
 			return nil
 		}
@@ -171,11 +172,6 @@ func ParseCount(data []byte) *Count {
 		}
 
 		count.Timestamp = int64(floatTimestamp)
-	}
-	if isTeldat, ok := msg["is_teldat"]; ok {
-		if count.IsTeldat, ok = isTeldat.(bool); !ok {
-			return nil
-		}
 	}
 
 	return count

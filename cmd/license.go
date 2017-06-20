@@ -38,25 +38,29 @@ import (
 // PubKey should be set on compile time
 var PubKey string
 
+// LimitBytes is a map containing the max bytes for each organization
+type LimitBytes map[string]uint64
+
 // License contains information about the limits of bytes that an organization
 // can send.
 type License struct {
-	UUID        string         `json:"uuid"`
-	ExpireAt    int64          `json:"expire_at"`
-	LimitBytes  int64          `json:"limit_bytes"`
-	ClusterUUID string         `json:"cluster_uuid"`
-	Sensors     map[string]int `json:"sensors"`
+	UUID         string         `json:"uuid"`
+	ExpireAt     int64          `json:"expire_at"`
+	LimitBytes   uint64         `json:"limit_bytes"`
+	ClusterUUID  string         `json:"cluster_uuid"`
+	Sensors      map[string]int `json:"sensors"`
+	Organization string         `json:"organization_uuid"`
 }
 
 // LoadLicenses reads a redBorder license from a file and returns a License
 // struct holding the decoded information.
-func LoadLicenses(config *AppConfig) (int64, error) {
+func LoadLicenses(config *AppConfig) (LimitBytes, error) {
 	var licenses []License
 	log := log.WithField("prefix", "license")
 
 	files, err := ioutil.ReadDir(config.LicensesDirectory)
 	if err != nil {
-		return -1, err
+		return nil, err
 	}
 
 	for _, file := range files {
@@ -67,13 +71,13 @@ func LoadLicenses(config *AppConfig) (int64, error) {
 		encodedLicense, encodedSignature, err :=
 			ReadLicense(config.LicensesDirectory + "/" + file.Name())
 		if err != nil {
-			return -1, err
+			return nil, err
 		}
 
 		if PubKey != "" {
 			pub, err := DecodePEM([]byte(PubKey))
 			if err != nil {
-				return -1, err
+				return nil, err
 			}
 
 			err = VerifyLicense(pub, encodedLicense, encodedSignature)
@@ -86,7 +90,7 @@ func LoadLicenses(config *AppConfig) (int64, error) {
 
 		license, err := DecodeLicense(encodedLicense)
 		if err != nil {
-			return -1, err
+			return nil, err
 		}
 
 		expires := time.Unix(license.ExpireAt, 0)
@@ -100,16 +104,37 @@ func LoadLicenses(config *AppConfig) (int64, error) {
 		licenses = append(licenses, *license)
 	}
 
-	var totalBytes int64
-	for _, license := range licenses {
-		totalBytes += license.LimitBytes
+	limits := make(LimitBytes)
+	if !config.OrganizationMode {
+		var totalBytes uint64
+		for _, license := range licenses {
+			if license.Organization != "" {
+				log.Warnf("Ignoring license WITH organization %s", license.UUID)
+				continue
+			}
+
+			totalBytes += license.LimitBytes
+		}
+
+		limits["*"] = totalBytes
+	} else {
+		for _, license := range licenses {
+			if license.Organization == "" {
+				log.Warnf("Ignoring license WITH NO organization %s", license.UUID)
+				continue
+			}
+
+			limits[license.Organization] = limits[license.Organization] + license.LimitBytes
+		}
 	}
 
-	log.
-		WithField("Total bytes", totalBytes).
-		Infof("Found %d valid licenses", len(licenses))
+	for k, v := range limits {
+		log.
+			WithField("Total bytes", v).
+			Infof("Organization %s", k)
+	}
 
-	return totalBytes, nil
+	return limits, nil
 }
 
 // ReadLicense read the license from a file. Decode as a base64 string and
