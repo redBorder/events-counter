@@ -101,10 +101,8 @@ func main() {
 	sigint := make(chan os.Signal)
 	signal.Notify(sigint, os.Interrupt)
 
-	go func() {
-		<-sigint
-		close(terminate)
-	}()
+	<-sigint
+	close(terminate)
 
 	/////////////
 	// The End //

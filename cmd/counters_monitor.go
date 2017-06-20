@@ -57,9 +57,14 @@ func CountersMonitor(config *AppConfig) {
 
 			<-time.After(remaining)
 
-			pipeline.Produce(nil, map[string]interface{}{
-				"reset_notification": true,
-			}, nil)
+			for org, bytes := range limitBytes {
+				if bytes > 0 {
+					pipeline.Produce(nil, map[string]interface{}{
+						"reset_notification": true,
+						"organization_uuid":  org,
+					}, nil)
+				}
+			}
 
 			reset <- struct{}{}
 		}

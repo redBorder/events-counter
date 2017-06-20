@@ -70,12 +70,13 @@ func createUknownUUIDMessage(uuid string) []byte {
 
 // createUknownUUIDMessage builds a JSON message alerting that an UUID does
 // not exists on the internal database.
-func createResetNotificationMessage() []byte {
+func createResetNotificationMessage(org string) []byte {
 	var data []byte
 
 	alert := &Alert{
-		Monitor:   "alert",
 		Timestamp: time.Now().Unix(),
+		Monitor:   "alert",
+		UUID:      org,
 		Type:      "counters_reset",
 	}
 
