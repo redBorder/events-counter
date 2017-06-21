@@ -34,6 +34,6 @@ type Alert struct {
 	Type         string `json:"type"`
 	UUID         string `json:"uuid,omitempty"`
 	CurrentBytes uint64 `json:"current_bytes,omitempty"`
-	Limit        uint64 `json:"limit"`
+	Limit        uint64 `json:"limit,omitempty"`
 	Timestamp    int64  `json:"timestamp"`
 }

@@ -84,6 +84,22 @@ func createResetNotificationMessage(org string) []byte {
 	return data
 }
 
+// createUknownUUIDMessage builds a JSON message alerting that an UUID does
+// not exists on the internal database.
+func createExpiryNotificationMessage(uuid string) []byte {
+	var data []byte
+
+	alert := &Alert{
+		Timestamp: time.Now().Unix(),
+		Monitor:   "alert",
+		UUID:      uuid,
+		Type:      "license_expired",
+	}
+
+	data, _ = json.Marshal(alert)
+	return data
+}
+
 // checkTimestamp is used to discard old timestamps (messages from previous
 // period).
 //

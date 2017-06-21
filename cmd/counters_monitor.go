@@ -48,6 +48,12 @@ func CountersMonitor(config *AppConfig) {
 				log.Fatalln("Error loading licenses: " + err.Error())
 			}
 
+			for k, v := range limitBytes.getOrganizationLimits() {
+				log.
+					WithField("Total bytes", v).
+					Infof("Organization %s", k)
+			}
+
 			pipeline := BootstrapMonitorPipeline(config, limitBytes)
 			StartConsumingMonitor(pipeline, config)
 
@@ -57,11 +63,20 @@ func CountersMonitor(config *AppConfig) {
 
 			<-time.After(remaining)
 
-			for org, bytes := range limitBytes {
+			for org, bytes := range limitBytes.getOrganizationLimits() {
 				if bytes > 0 {
 					pipeline.Produce(nil, map[string]interface{}{
 						"reset_notification": true,
 						"organization_uuid":  org,
+					}, nil)
+				}
+			}
+
+			for uuid, license := range limitBytes {
+				if license.Expired {
+					pipeline.Produce(nil, map[string]interface{}{
+						"expiry_notification": true,
+						"license_uuid":        uuid,
 					}, nil)
 				}
 			}
@@ -90,7 +105,7 @@ func BootstrapMonitorPipeline(config *AppConfig, limits LimitBytes) *rbforwarder
 	components = append(components, &monitor.CountersMonitor{
 		Config: monitor.Config{
 			Workers: 1,
-			Limits:  limits,
+			Limits:  limits.getOrganizationLimits(),
 			Period:  config.Monitor.Timer.Period,
 			Offset:  config.Monitor.Timer.Offset,
 			Log:     log,
