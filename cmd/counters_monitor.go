@@ -19,6 +19,9 @@
 package main
 
 import (
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	rdkafka "github.com/confluentinc/confluent-kafka-go/kafka"
@@ -32,6 +35,9 @@ var reset = make(chan struct{})
 // CountersMonitor starts the pipeline for the monitoring process.
 func CountersMonitor(config *AppConfig) {
 	log := log.WithField("prefix", "monitor")
+
+	reload := make(chan os.Signal, 1)
+	signal.Notify(reload, syscall.SIGHUP)
 
 	wg.Add(1)
 	go func() {
@@ -61,7 +67,10 @@ func CountersMonitor(config *AppConfig) {
 				WithField("Time", intervalEnd.String()).
 				Infof("Next reset set")
 
-			<-time.After(remaining)
+			select {
+			case <-time.After(remaining):
+			case <-reload:
+			}
 
 			for org, bytes := range limitBytes.getOrganizationLimits() {
 				if bytes > 0 {
