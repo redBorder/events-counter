@@ -340,6 +340,33 @@ func TestMonitorReset(t *testing.T) {
 				d.AssertExpectations(t)
 			})
 		})
+
+		Convey("When an expiry notification message is received", func() {
+			Convey("Should send an expiry notification", func() {
+				message := utils.NewMessage()
+				message.Opts.Set("expiry_notification", nil)
+				message.Opts.Set("license_uuid", "my_uuid")
+
+				d := new(Doner)
+				d.doneCalled = make(chan *utils.Message, 1)
+				d.On("Done", mock.AnythingOfType("*utils.Message"), 0, mock.AnythingOfType("string"))
+
+				monitor.OnMessage(message, d.Done)
+				result := <-d.doneCalled
+				data, err := result.PopPayload()
+				So(data, ShouldNotBeNil)
+				So(err, ShouldBeNil)
+
+				response := make(map[string]interface{})
+				err = json.Unmarshal(data, &response)
+				So(err, ShouldBeNil)
+				So(response["monitor"], ShouldEqual, "alert")
+				So(response["type"], ShouldEqual, "license_expired")
+				So(response["uuid"], ShouldEqual, "my_uuid")
+
+				d.AssertExpectations(t)
+			})
+		})
 	})
 }
 

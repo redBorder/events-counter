@@ -92,6 +92,15 @@ func (mon *CountersMonitor) OnMessage(m *utils.Message, done utils.Done) {
 		return
 	}
 
+	if _, ok = m.Opts.Get("expiry_notification"); ok {
+		uuid, _ := m.Opts.Get("license_uuid")
+
+		m.PushPayload(createExpiryNotificationMessage(uuid.(string)))
+		mon.Log.Debugf("Sending expiry notification")
+		done(m, 0, "Expiry notification")
+		return
+	}
+
 	if payload, err = m.PopPayload(); err != nil {
 		done(m, 0, "No payload to produce")
 		return
