@@ -37,6 +37,8 @@ coverage:
 	@printf "$(MKL_BLUE)[COVERAGE]$(MKL_CLR_RESET) Computing coverage\n"
 	@echo "mode: count" > coverage.out
 	@go test -covermode=count -coverprofile=counter.part ./counter
+	@go test -covermode=count -coverprofile=monitor.part ./monitor
+	@go test -covermode=count -coverprofile=producer.part ./producer
 	@grep -h -v "mode: count" *.part >> coverage.out
 	@go tool cover -func coverage.out
 
