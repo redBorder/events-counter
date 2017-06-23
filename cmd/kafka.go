@@ -25,7 +25,9 @@ func BootstrapRdKafkaConsumer(
 	attributes map[string]string, topicAttributes map[string]string,
 ) (*rdkafka.Consumer, error) {
 
-	ta := rdkafka.ConfigMap{}
+	ta := rdkafka.ConfigMap{
+		"auto.offset.reset": "smallest",
+	}
 	for key, value := range topicAttributes {
 		ta.SetKey(key, value)
 	}
