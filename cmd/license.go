@@ -245,12 +245,14 @@ func FormatLicense(license *License) string {
 	keyColor := color.New(color.FgYellow, color.Bold).SprintFunc()
 
 	return fmt.Sprintf("Using license \n"+
-		keyColor("\tUUID:         ")+"%s\n"+
-		keyColor("\tCluster UUID: ")+"%s\n"+
-		keyColor("\tExpires:      ")+"%s\n"+
-		keyColor("\tLimit bytes:  ")+"%d\n",
+		keyColor("\tUUID:              ")+"%s\n"+
+		keyColor("\tCluster UUID:      ")+"%s\n"+
+		keyColor("\tOrganization UUID: ")+"%s\n"+
+		keyColor("\tExpires:           ")+"%s\n"+
+		keyColor("\tLimit bytes:       ")+"%d",
 		license.UUID,
 		license.ClusterUUID,
+		license.Organization,
 		time.Unix(license.ExpireAt, 0).String(),
 		license.LimitBytes,
 	)
