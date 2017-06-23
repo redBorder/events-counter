@@ -39,6 +39,9 @@ func CountersMonitor(config *AppConfig) {
 	reload := make(chan os.Signal, 1)
 	signal.Notify(reload, syscall.SIGHUP)
 
+	usr := make(chan os.Signal, 1)
+	signal.Notify(usr, syscall.SIGUSR1)
+
 	wg.Add(1)
 	go func() {
 		for {
@@ -67,32 +70,49 @@ func CountersMonitor(config *AppConfig) {
 				WithField("Time", intervalEnd.String()).
 				Infof("Next reset set")
 
-			select {
-			case <-time.After(remaining):
-			case <-reload:
-			}
+		loop:
+			for {
+				select {
+				case <-usr:
+					pipeline.Produce(nil, map[string]interface{}{"show_total": true}, nil)
+					continue loop
 
-			for org, bytes := range limitBytes.getOrganizationLimits() {
-				if bytes > 0 {
-					pipeline.Produce(nil, map[string]interface{}{
-						"reset_notification": true,
-						"organization_uuid":  org,
-					}, nil)
+				case <-time.After(remaining):
+					notify(pipeline, limitBytes, true)
+					break loop
+
+				case <-reload:
+					notify(pipeline, limitBytes, false)
+					break loop
 				}
 			}
-
-			for uuid, license := range limitBytes {
-				if license.Expired {
-					pipeline.Produce(nil, map[string]interface{}{
-						"expiry_notification": true,
-						"license_uuid":        uuid,
-					}, nil)
-				}
-			}
-
-			reset <- struct{}{}
 		}
 	}()
+}
+
+func notify(
+	pipeline *rbforwarder.RBForwarder, limitBytes LimitBytes, resetCounters bool,
+) {
+	for org, bytes := range limitBytes.getOrganizationLimits() {
+		if bytes > 0 {
+			pipeline.Produce(nil, map[string]interface{}{
+				"reset_notification": true,
+				"organization_uuid":  org,
+				"reset_counters":     resetCounters,
+			}, nil)
+		}
+	}
+
+	for uuid, license := range limitBytes {
+		if license.Expired {
+			pipeline.Produce(nil, map[string]interface{}{
+				"expiry_notification": true,
+				"license_uuid":        uuid,
+			}, nil)
+		}
+	}
+
+	reset <- struct{}{}
 }
 
 // BootstrapMonitorPipeline bootstrap a RBForwarder pipeline

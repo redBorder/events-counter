@@ -285,10 +285,40 @@ func TestMonitorReset(t *testing.T) {
 		})
 
 		Convey("When a reset message is received", func() {
-			Convey("Should send a reset notification", func() {
+			Convey("Should send a reset notification without counter reset", func() {
 				message := utils.NewMessage()
 				message.Opts.Set("reset_notification", nil)
 				message.Opts.Set("organization_uuid", "my_uuid")
+				message.Opts.Set("reset_counters", false)
+
+				d := new(Doner)
+				d.doneCalled = make(chan *utils.Message, 1)
+				d.On("Done", mock.AnythingOfType("*utils.Message"), 0, mock.AnythingOfType("string"))
+
+				monitor.OnMessage(message, d.Done)
+				result := <-d.doneCalled
+				data, err := result.PopPayload()
+				So(data, ShouldNotBeNil)
+				So(err, ShouldBeNil)
+
+				response := make(map[string]interface{})
+				err = json.Unmarshal(data, &response)
+				So(err, ShouldBeNil)
+				So(response["monitor"], ShouldEqual, "alert")
+				So(response["type"], ShouldEqual, "counters_reset")
+				So(response["uuid"], ShouldEqual, "my_uuid")
+
+				bytes := monitor.(*CountersMonitor).db["my_uuid"]
+				So(bytes, ShouldEqual, 102)
+
+				d.AssertExpectations(t)
+			})
+
+			Convey("Should send a reset notification with counter reset", func() {
+				message := utils.NewMessage()
+				message.Opts.Set("reset_notification", nil)
+				message.Opts.Set("organization_uuid", "my_uuid")
+				message.Opts.Set("reset_counters", true)
 
 				d := new(Doner)
 				d.doneCalled = make(chan *utils.Message, 1)

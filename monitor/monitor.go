@@ -25,11 +25,15 @@ import (
 
 type logger interface {
 	Debugf(format string, args ...interface{})
+	Infof(format string, args ...interface{})
+	Infoln(args ...interface{})
 }
 
 type nullLogger struct{}
 
 func (n *nullLogger) Debugf(format string, args ...interface{}) {}
+func (n *nullLogger) Infof(format string, args ...interface{})  {}
+func (n *nullLogger) Infoln(args ...interface{})                {}
 
 // Config contains the configuration for a Monitor.
 type Config struct {
@@ -64,6 +68,7 @@ func (mon *CountersMonitor) Spawn(id int) utils.Composer {
 		monitor.Log = new(nullLogger)
 	}
 	monitor.db = bootstrapDB(mon.Limits)
+
 	return monitor
 }
 
@@ -82,12 +87,33 @@ func (mon *CountersMonitor) OnMessage(m *utils.Message, done utils.Done) {
 		bytes   uint64
 	)
 
+	if showTotal, ok := m.Opts.Get("show_total"); ok {
+		if showTotalBool, ok := showTotal.(bool); ok {
+			if showTotalBool {
+				for k, v := range mon.db {
+					mon.Log.Infof("[%s] Consumed bytes %d", k, v)
+				}
+			}
+		}
+
+		done(m, 0, "Show total")
+		return
+	}
+
 	if _, ok = m.Opts.Get("reset_notification"); ok {
 		org, _ := m.Opts.Get("organization_uuid")
-		mon.db[org.(string)] = 0
+
+		if resetCounters, ok := m.Opts.Get("reset_counters"); ok {
+			if shouldReset, ok := resetCounters.(bool); ok {
+				if shouldReset {
+					mon.db[org.(string)] = 0
+					mon.Log.Infoln("Counters has been reset")
+				}
+			}
+		}
 
 		m.PushPayload(createResetNotificationMessage(org.(string)))
-		mon.Log.Debugf("Sending reset notification")
+		mon.Log.Debugf("Sending unblock notification")
 		done(m, 0, "Reset notification")
 		return
 	}
