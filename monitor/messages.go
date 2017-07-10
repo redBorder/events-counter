@@ -30,10 +30,11 @@ type Count struct {
 // Alert contains the information abot a message alerting that the
 // maximum number of messages has been reached.
 type Alert struct {
-	Monitor      string `json:"monitor"`
-	Type         string `json:"type"`
-	UUID         string `json:"uuid,omitempty"`
-	CurrentBytes uint64 `json:"current_bytes,omitempty"`
-	Limit        uint64 `json:"limit,omitempty"`
-	Timestamp    int64  `json:"timestamp"`
+	Monitor      string   `json:"monitor"`
+	Type         string   `json:"type"`
+	UUID         string   `json:"uuid,omitempty"`
+	CurrentBytes uint64   `json:"current_bytes,omitempty"`
+	Limit        uint64   `json:"limit,omitempty"`
+	Timestamp    int64    `json:"timestamp"`
+	Licenses     []string `json:"licenses,omitempty"`
 }

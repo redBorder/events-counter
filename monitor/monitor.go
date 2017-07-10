@@ -81,7 +81,6 @@ func (mon *CountersMonitor) Spawn(id int) utils.Composer {
 //   does, send an alert to Kafka.
 func (mon *CountersMonitor) OnMessage(m *utils.Message, done utils.Done) {
 	var (
-		ok      bool
 		payload []byte
 		err     error
 		bytes   uint64
@@ -100,30 +99,22 @@ func (mon *CountersMonitor) OnMessage(m *utils.Message, done utils.Done) {
 		return
 	}
 
-	if _, ok = m.Opts.Get("reset_notification"); ok {
-		org, _ := m.Opts.Get("organization_uuid")
-
+	if _, ok := m.Opts.Get("allowed_licenses"); ok {
 		if resetCounters, ok := m.Opts.Get("reset_counters"); ok {
 			if shouldReset, ok := resetCounters.(bool); ok {
 				if shouldReset {
-					mon.db[org.(string)] = 0
+					for organization := range mon.db {
+						mon.db[organization] = 0
+					}
 					mon.Log.Infoln("Counters has been reset")
 				}
 			}
 		}
 
-		m.PushPayload(createResetNotificationMessage(org.(string)))
-		mon.Log.Debugf("Sending unblock notification")
-		done(m, 0, "Reset notification")
-		return
-	}
-
-	if _, ok = m.Opts.Get("expiry_notification"); ok {
-		uuid, _ := m.Opts.Get("license_uuid")
-
-		m.PushPayload(createExpiryNotificationMessage(uuid.(string)))
-		mon.Log.Debugf("Sending expiry notification")
-		done(m, 0, "Expiry notification")
+		licenses, _ := m.Opts.Get("licenses")
+		// FIXME check assertion
+		m.PushPayload(createLicensesAllowedMessage(licenses.([]string)))
+		done(m, 0, "Allowed licenses")
 		return
 	}
 
@@ -138,11 +129,12 @@ func (mon *CountersMonitor) OnMessage(m *utils.Message, done utils.Done) {
 		return
 	}
 
-	if ok = belongsToInterval(count.Timestamp, mon.Period, mon.Offset, mon.clk.Now().Unix()); !ok {
+	if ok := belongsToInterval(count.Timestamp, mon.Period, mon.Offset, mon.clk.Now().Unix()); !ok {
 		done(m, 0, "Message too old")
 		return
 	}
 
+	var ok bool
 	if bytes, ok = mon.db[count.UUID]; !ok {
 		m.PushPayload(createUknownUUIDMessage(count.UUID))
 		done(m, 0, "Unknown UUID: \""+count.UUID+"\"")

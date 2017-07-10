@@ -93,24 +93,19 @@ func CountersMonitor(config *AppConfig) {
 func notify(
 	pipeline *rbforwarder.RBForwarder, limitBytes LimitBytes, resetCounters bool,
 ) {
-	for org, bytes := range limitBytes.getOrganizationLimits() {
-		if bytes > 0 {
-			pipeline.Produce(nil, map[string]interface{}{
-				"reset_notification": true,
-				"organization_uuid":  org,
-				"reset_counters":     resetCounters,
-			}, nil)
+	var uuids []string
+
+	for uuid, license := range limitBytes {
+		if !license.Expired {
+			uuids = append(uuids, uuid)
 		}
 	}
 
-	for uuid, license := range limitBytes {
-		if license.Expired {
-			pipeline.Produce(nil, map[string]interface{}{
-				"expiry_notification": true,
-				"license_uuid":        uuid,
-			}, nil)
-		}
-	}
+	pipeline.Produce(nil, map[string]interface{}{
+		"allowed_licenses": true,
+		"licenses":         uuids,
+		"reset_counters":   resetCounters,
+	}, nil)
 
 	reset <- struct{}{}
 }

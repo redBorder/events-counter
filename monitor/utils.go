@@ -68,32 +68,14 @@ func createUknownUUIDMessage(uuid string) []byte {
 	return data
 }
 
-// createUknownUUIDMessage builds a JSON message alerting that an UUID does
-// not exists on the internal database.
-func createResetNotificationMessage(org string) []byte {
+func createLicensesAllowedMessage(uuids []string) []byte {
 	var data []byte
 
 	alert := &Alert{
 		Timestamp: time.Now().Unix(),
 		Monitor:   "alert",
-		UUID:      org,
-		Type:      "counters_reset",
-	}
-
-	data, _ = json.Marshal(alert)
-	return data
-}
-
-// createUknownUUIDMessage builds a JSON message alerting that an UUID does
-// not exists on the internal database.
-func createExpiryNotificationMessage(uuid string) []byte {
-	var data []byte
-
-	alert := &Alert{
-		Timestamp: time.Now().Unix(),
-		Monitor:   "alert",
-		UUID:      uuid,
-		Type:      "license_expired",
+		Licenses:  uuids,
+		Type:      "allowed_licenses",
 	}
 
 	data, _ = json.Marshal(alert)
