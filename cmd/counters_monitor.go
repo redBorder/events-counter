@@ -19,6 +19,9 @@
 package main
 
 import (
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	rdkafka "github.com/confluentinc/confluent-kafka-go/kafka"
@@ -32,6 +35,12 @@ var reset = make(chan struct{})
 // CountersMonitor starts the pipeline for the monitoring process.
 func CountersMonitor(config *AppConfig) {
 	log := log.WithField("prefix", "monitor")
+
+	reload := make(chan os.Signal, 1)
+	signal.Notify(reload, syscall.SIGHUP)
+
+	usr := make(chan os.Signal, 1)
+	signal.Notify(usr, syscall.SIGUSR1)
 
 	wg.Add(1)
 	go func() {
@@ -48,6 +57,12 @@ func CountersMonitor(config *AppConfig) {
 				log.Fatalln("Error loading licenses: " + err.Error())
 			}
 
+			for k, v := range limitBytes.getOrganizationLimits() {
+				log.
+					WithField("Total bytes", v).
+					Infof("Organization %s", k)
+			}
+
 			pipeline := BootstrapMonitorPipeline(config, limitBytes)
 			StartConsumingMonitor(pipeline, config)
 
@@ -55,20 +70,44 @@ func CountersMonitor(config *AppConfig) {
 				WithField("Time", intervalEnd.String()).
 				Infof("Next reset set")
 
-			<-time.After(remaining)
+		loop:
+			for {
+				select {
+				case <-usr:
+					pipeline.Produce(nil, map[string]interface{}{"show_total": true}, nil)
+					continue loop
 
-			for org, bytes := range limitBytes {
-				if bytes > 0 {
-					pipeline.Produce(nil, map[string]interface{}{
-						"reset_notification": true,
-						"organization_uuid":  org,
-					}, nil)
+				case <-time.After(remaining):
+					notify(pipeline, limitBytes, true)
+					break loop
+
+				case <-reload:
+					notify(pipeline, limitBytes, false)
+					break loop
 				}
 			}
-
-			reset <- struct{}{}
 		}
 	}()
+}
+
+func notify(
+	pipeline *rbforwarder.RBForwarder, limitBytes LimitBytes, resetCounters bool,
+) {
+	var uuids []string
+
+	for uuid, license := range limitBytes {
+		if !license.Expired {
+			uuids = append(uuids, uuid)
+		}
+	}
+
+	pipeline.Produce(nil, map[string]interface{}{
+		"allowed_licenses": true,
+		"licenses":         uuids,
+		"reset_counters":   resetCounters,
+	}, nil)
+
+	reset <- struct{}{}
 }
 
 // BootstrapMonitorPipeline bootstrap a RBForwarder pipeline
@@ -90,7 +129,7 @@ func BootstrapMonitorPipeline(config *AppConfig, limits LimitBytes) *rbforwarder
 	components = append(components, &monitor.CountersMonitor{
 		Config: monitor.Config{
 			Workers: 1,
-			Limits:  limits,
+			Limits:  limits.getOrganizationLimits(),
 			Period:  config.Monitor.Timer.Period,
 			Offset:  config.Monitor.Timer.Offset,
 			Log:     log,

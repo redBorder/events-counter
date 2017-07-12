@@ -25,11 +25,15 @@ import (
 
 type logger interface {
 	Debugf(format string, args ...interface{})
+	Infof(format string, args ...interface{})
+	Infoln(args ...interface{})
 }
 
 type nullLogger struct{}
 
 func (n *nullLogger) Debugf(format string, args ...interface{}) {}
+func (n *nullLogger) Infof(format string, args ...interface{})  {}
+func (n *nullLogger) Infoln(args ...interface{})                {}
 
 // Config contains the configuration for a Monitor.
 type Config struct {
@@ -64,6 +68,7 @@ func (mon *CountersMonitor) Spawn(id int) utils.Composer {
 		monitor.Log = new(nullLogger)
 	}
 	monitor.db = bootstrapDB(mon.Limits)
+
 	return monitor
 }
 
@@ -76,19 +81,40 @@ func (mon *CountersMonitor) Spawn(id int) utils.Composer {
 //   does, send an alert to Kafka.
 func (mon *CountersMonitor) OnMessage(m *utils.Message, done utils.Done) {
 	var (
-		ok      bool
 		payload []byte
 		err     error
 		bytes   uint64
 	)
 
-	if _, ok = m.Opts.Get("reset_notification"); ok {
-		org, _ := m.Opts.Get("organization_uuid")
-		mon.db[org.(string)] = 0
+	if showTotal, ok := m.Opts.Get("show_total"); ok {
+		if showTotalBool, ok := showTotal.(bool); ok {
+			if showTotalBool {
+				for k, v := range mon.db {
+					mon.Log.Infof("[%s] Consumed bytes %d", k, v)
+				}
+			}
+		}
 
-		m.PushPayload(createResetNotificationMessage(org.(string)))
-		mon.Log.Debugf("Sending reset notification")
-		done(m, 0, "Reset notification")
+		done(m, 0, "Show total")
+		return
+	}
+
+	if _, ok := m.Opts.Get("allowed_licenses"); ok {
+		if resetCounters, ok := m.Opts.Get("reset_counters"); ok {
+			if shouldReset, ok := resetCounters.(bool); ok {
+				if shouldReset {
+					for organization := range mon.db {
+						mon.db[organization] = 0
+					}
+					mon.Log.Infoln("Counters has been reset")
+				}
+			}
+		}
+
+		licenses, _ := m.Opts.Get("licenses")
+		// FIXME check assertion
+		m.PushPayload(createLicensesAllowedMessage(licenses.([]string)))
+		done(m, 0, "Allowed licenses")
 		return
 	}
 
@@ -103,11 +129,12 @@ func (mon *CountersMonitor) OnMessage(m *utils.Message, done utils.Done) {
 		return
 	}
 
-	if ok = belongsToInterval(count.Timestamp, mon.Period, mon.Offset, mon.clk.Now().Unix()); !ok {
+	if ok := belongsToInterval(count.Timestamp, mon.Period, mon.Offset, mon.clk.Now().Unix()); !ok {
 		done(m, 0, "Message too old")
 		return
 	}
 
+	var ok bool
 	if bytes, ok = mon.db[count.UUID]; !ok {
 		m.PushPayload(createUknownUUIDMessage(count.UUID))
 		done(m, 0, "Unknown UUID: \""+count.UUID+"\"")

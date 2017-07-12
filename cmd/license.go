@@ -38,8 +38,26 @@ import (
 // PubKey should be set on compile time
 var PubKey string
 
+type licenseStatus struct {
+	OrganizationUUID string
+	Amount           uint64
+	Expired          bool
+}
+
 // LimitBytes is a map containing the max bytes for each organization
-type LimitBytes map[string]uint64
+type LimitBytes map[string]*licenseStatus
+
+func (l LimitBytes) getOrganizationLimits() map[string]uint64 {
+	total := make(map[string]uint64)
+
+	for _, v := range l {
+		if !v.Expired {
+			total[v.OrganizationUUID] += v.Amount
+		}
+	}
+
+	return total
+}
 
 // License contains information about the limits of bytes that an organization
 // can send.
@@ -55,7 +73,8 @@ type License struct {
 // LoadLicenses reads a redBorder license from a file and returns a License
 // struct holding the decoded information.
 func LoadLicenses(config *AppConfig) (LimitBytes, error) {
-	var licenses []License
+	limits := make(LimitBytes)
+
 	log := log.WithField("prefix", "license")
 
 	files, err := ioutil.ReadDir(config.LicensesDirectory)
@@ -93,45 +112,34 @@ func LoadLicenses(config *AppConfig) (LimitBytes, error) {
 			return nil, err
 		}
 
+		limits[license.UUID] = &licenseStatus{}
+
 		expires := time.Unix(license.ExpireAt, 0)
 		if expires.Before(time.Now()) {
 			log.Warnf("License %s has expired", license.UUID)
+			limits[license.UUID].Expired = true
 			continue
 		}
 
 		log.Infoln(FormatLicense(license))
 
-		licenses = append(licenses, *license)
-	}
-
-	limits := make(LimitBytes)
-	if !config.OrganizationMode {
-		var totalBytes uint64
-		for _, license := range licenses {
-			if license.Organization != "" {
-				log.Warnf("Ignoring license WITH organization %s", license.UUID)
-				continue
-			}
-
-			totalBytes += license.LimitBytes
-		}
-
-		limits["*"] = totalBytes
-	} else {
-		for _, license := range licenses {
+		if config.OrganizationMode {
 			if license.Organization == "" {
 				log.Warnf("Ignoring license WITH NO organization %s", license.UUID)
 				continue
 			}
 
-			limits[license.Organization] = limits[license.Organization] + license.LimitBytes
-		}
-	}
+			limits[license.UUID].Amount += license.LimitBytes
+			limits[license.UUID].OrganizationUUID = license.Organization
+		} else {
+			if license.Organization != "" {
+				log.Warnf("Ignoring license WITH organization %s", license.UUID)
+				continue
+			}
 
-	for k, v := range limits {
-		log.
-			WithField("Total bytes", v).
-			Infof("Organization %s", k)
+			limits[license.UUID].Amount += license.LimitBytes
+			limits[license.UUID].OrganizationUUID = "*"
+		}
 	}
 
 	return limits, nil
@@ -237,12 +245,14 @@ func FormatLicense(license *License) string {
 	keyColor := color.New(color.FgYellow, color.Bold).SprintFunc()
 
 	return fmt.Sprintf("Using license \n"+
-		keyColor("\tUUID:         ")+"%s\n"+
-		keyColor("\tCluster UUID: ")+"%s\n"+
-		keyColor("\tExpires:      ")+"%s\n"+
-		keyColor("\tLimit bytes:  ")+"%d\n",
+		keyColor("\tUUID:              ")+"%s\n"+
+		keyColor("\tCluster UUID:      ")+"%s\n"+
+		keyColor("\tOrganization UUID: ")+"%s\n"+
+		keyColor("\tExpires:           ")+"%s\n"+
+		keyColor("\tLimit bytes:       ")+"%d",
 		license.UUID,
 		license.ClusterUUID,
+		license.Organization,
 		time.Unix(license.ExpireAt, 0).String(),
 		license.LimitBytes,
 	)
