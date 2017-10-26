@@ -70,6 +70,8 @@ func CountersMonitor(config *AppConfig) {
 				WithField("Time", intervalEnd.String()).
 				Infof("Next reset set")
 
+			sleepTime := time.After(remaining)
+
 		loop:
 			for {
 				select {
@@ -77,7 +79,7 @@ func CountersMonitor(config *AppConfig) {
 					pipeline.Produce(nil, map[string]interface{}{"show_total": true}, nil)
 					continue loop
 
-				case <-time.After(remaining):
+				case <-sleepTime:
 					notify(pipeline, limitBytes, true)
 					break loop
 
