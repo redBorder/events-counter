@@ -19,8 +19,6 @@ build: vendor
 	@printf "$(MKL_YELLOW)[BUILD]$(MKL_CLR_RESET)    $(BIN) created\n"
 
 install: build
-	@printf "$(MKL_YELLOW)[INSTALL]$(MKL_CLR_RESET)  DESTDIR: $(DESTDIR)\n"
-	@printf "$(MKL_YELLOW)[INSTALL]$(MKL_CLR_RESET)  PREFIX: $(prefix)\n"
 	@printf "$(MKL_YELLOW)[INSTALL]$(MKL_CLR_RESET)  Installing  $(BIN) to $(bindir)\n"
 	@install $(BIN) $(bindir)
 	@printf "$(MKL_YELLOW)[INSTALL]$(MKL_CLR_RESET)  Installed\n"

@@ -25,10 +25,6 @@ Group:   Development/Libraries/Go
 export GOPATH=${PWD}/gopath
 export PATH=${GOPATH}:${PATH}
 mkdir -p $GOPATH/src/github.com/redBorder/events-counter
-echo "Listing actual directory .." 
-ls -las
-echo "PWD is.."
-pwd
 rsync -az --exclude=gopath/ ./ $GOPATH/src/github.com/redBorder/events-counter
 cd $GOPATH/src/github.com/redBorder/events-counter
 make
@@ -37,11 +33,6 @@ make
 export PARENT_BUILD=${PWD}
 export GOPATH=${PWD}/gopath
 export PATH=${GOPATH}:${PATH}
-cd $GOPATH/src/github.com/redBorder/events-counter
-echo "ls $GOPATH/src/github.com/redBorder/events-counter is.. "
-ls $GOPATH/src/github.com/redBorder/events-counter -ls
-echo "buildroot is: "
-echo "%{buildroot}"
 mkdir -p %{buildroot}/usr/local/bin
 export DESTDIR=%{buildroot}
 DESTDIR=%{buildroot} make install
