@@ -5,7 +5,7 @@ MKL_BLUE?=	\033[034m
 MKL_CLR_RESET?=	\033[0m
 
 BIN=      events-counter
-prefix?=  $$DESTDIR/usr/local
+prefix?=  /usr/local
 bindir?=	$(prefix)/bin
 
 VERSION= $(shell git describe --tags --always --dirty=-dev)
