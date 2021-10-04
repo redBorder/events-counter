@@ -1,0 +1,6 @@
+counters:
+  batch_timeout_s: 5                     # Max time to wait before send a count message
+  batch_max_messages: 1000               # Max number of messages to hold before send a count message
+  kafka:                                 # Kafka configuration
+    write_topic: "rb_monitor"            # Topic to send the count
+    read_topics:                         # Topics to read messages for accounting
