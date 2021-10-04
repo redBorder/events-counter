@@ -5,7 +5,7 @@ MKL_BLUE?=	\033[034m
 MKL_CLR_RESET?=	\033[0m
 
 BIN=      events-counter
-prefix?=  /usr/local
+prefix?=  $$DESTDIR/usr/local
 bindir?=	$(prefix)/bin
 
 VERSION= $(shell git describe --tags --always --dirty=-dev)
@@ -19,7 +19,9 @@ build: vendor
 	@printf "$(MKL_YELLOW)[BUILD]$(MKL_CLR_RESET)    $(BIN) created\n"
 
 install: build
-	@printf "$(MKL_YELLOW)[INSTALL]$(MKL_CLR_RESET)  Installing $(BIN) to $(bindir)\n"
+	@printf "$(MKL_YELLOW)[INSTALL]$(MKL_CLR_RESET)  DESTDIR: $(DESTDIR)\n"
+	@printf "$(MKL_YELLOW)[INSTALL]$(MKL_CLR_RESET)  PREFIX: $(prefix)\n"
+	@printf "$(MKL_YELLOW)[INSTALL]$(MKL_CLR_RESET)  Installing  $(BIN) to $(bindir)\n"
 	@install $(BIN) $(bindir)
 	@printf "$(MKL_YELLOW)[INSTALL]$(MKL_CLR_RESET)  Installed\n"
 

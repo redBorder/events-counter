@@ -34,13 +34,16 @@ cd $GOPATH/src/github.com/redBorder/events-counter
 make
 
 %install
+export PARENT_BUILD=${PWD}
 export GOPATH=${PWD}/gopath
 export PATH=${GOPATH}:${PATH}
 cd $GOPATH/src/github.com/redBorder/events-counter
 echo "ls $GOPATH/src/github.com/redBorder/events-counter is.. "
 ls $GOPATH/src/github.com/redBorder/events-counter -ls
 echo "buildroot is: "
-echo $buildroot
+echo "%{buildroot}"
+mkdir -p %{buildroot}/usr/local/bin
+export DESTDIR=%{buildroot}
 DESTDIR=%{buildroot} make install
 mkdir -p %{buildroot}/usr/share/events-counter
 mkdir -p %{buildroot}/etc/events-counter
@@ -62,7 +65,7 @@ exit 0
 
 %files
 %defattr(755,root,root)
-/usr/bin/events-counter
+/usr/local/bin/events-counter
 %defattr(644,root,root)
 /usr/share/events-counter/config.yml
 /usr/lib/systemd/system/events-counter.service
