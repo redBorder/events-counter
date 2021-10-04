@@ -58,3 +58,6 @@ vendor-clean:
 	rm -rf vendor/
 
 all: build tests coverage
+
+rpm: clean
+	$(MAKE) -C packaging/rpm
