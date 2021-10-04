@@ -33,6 +33,7 @@ make
 export PARENT_BUILD=${PWD}
 export GOPATH=${PWD}/gopath
 export PATH=${GOPATH}:${PATH}
+cd $GOPATH/src/github.com/redBorder/events-counter
 mkdir -p %{buildroot}/usr/local/bin
 export DESTDIR=%{buildroot}
 DESTDIR=%{buildroot} make install
