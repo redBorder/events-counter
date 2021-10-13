@@ -6,11 +6,13 @@ License: GNU AGPLv3
 URL: https://github.com/redBorder/events-counter
 Source0: %{name}-%{version}.tar.gz
 
-BuildRequires: go glide
-BuildRequires:	rsync
-BuildRequires: librdkafka-devel
+BuildRequires: go = 1.6.3
+BuildRequires: glide rsync gcc git
+BuildRequires:	rsync mlocate pkgconfig
+BuildRequires: librd-devel = 0.1.0
+#BuildRequires: librdkafka-devel
 
-Requires: librdkafka1
+Requires: librd0 librdkafka1
 
 Summary: Counts bytes of kafka topics
 Group:   Development/Libraries/Go
@@ -22,6 +24,13 @@ Group:   Development/Libraries/Go
 %setup -qn %{name}-%{version}
 
 %build
+git clone --branch v0.9.2 https://github.com/edenhill/librdkafka.git /tmp/librdkafka-v0.9.2
+cd /tmp/librdkafka-v0.9.2
+./configure --prefix=/usr --sbindir=/usr/bin --exec-prefix=/usr && make
+make install
+cd -
+ldconfig
+export PKG_CONFIG_PATH=/usr/lib/pkgconfig
 export GOPATH=${PWD}/gopath
 export PATH=${GOPATH}:${PATH}
 mkdir -p $GOPATH/src/github.com/redBorder/events-counter
@@ -33,6 +42,7 @@ make
 export PARENT_BUILD=${PWD}
 export GOPATH=${PWD}/gopath
 export PATH=${GOPATH}:${PATH}
+export PKG_CONFIG_PATH=/usr/lib64/pkgconfig
 cd $GOPATH/src/github.com/redBorder/events-counter
 mkdir -p %{buildroot}/usr/bin
 prefix=%{buildroot}/usr make install
