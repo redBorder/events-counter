@@ -2,7 +2,7 @@
 Description=Count bytes in kafka topics
 
 [Service]
-ExecStart=/usr/bin/events-counter -c /etc/events-counter/config.yml
+ExecStart=/usr/bin/events-counter -config /etc/events-counter/config.yml
 Restart=always
 User=events-counter
 Group=events-counter

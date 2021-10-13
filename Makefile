@@ -8,7 +8,7 @@ BIN=      events-counter
 prefix?=  /usr/local
 bindir?=	$(prefix)/bin
 
-VERSION= $(shell git describe --tags --always --dirty=-dev)
+VERSION?= $(shell git describe --tags --always --dirty=-dev)
 
 LDFLAGS+=	'-X "main.version=$(VERSION)"
 LDFLAGS+=	-X "main.PubKey=$(PUBLIC_KEY)"'
