@@ -45,7 +45,7 @@ export PATH=${GOPATH}:${PATH}
 export PKG_CONFIG_PATH=/usr/lib64/pkgconfig
 cd $GOPATH/src/github.com/redBorder/events-counter
 mkdir -p %{buildroot}/usr/bin
-prefix=%{buildroot}/usr make install
+prefix=%{buildroot}/usr PKG_CONFIG_PATH=/usr/lib/pkgconfig/ make install
 mkdir -p %{buildroot}/usr/share/events-counter
 mkdir -p %{buildroot}/etc/events-counter
 install -D -m 644 events-counter.service %{buildroot}/usr/lib/systemd/system/events-counter.service
