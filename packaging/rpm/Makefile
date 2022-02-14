@@ -1,4 +1,4 @@
-PACKAGE_NAME?=	events-counter
+PACKAGE_NAME?=	redborder-events-counter
 
 VERSION?=	$(shell git describe --abbrev=6 --tags HEAD --always | sed 's/-/_/g')
 
@@ -33,7 +33,7 @@ srpm: build_prepare
 		--define "__release $(BUILD_NUMBER)" \
 		--resultdir=$(RESULT_DIR) \
 		--buildsrpm \
-		--spec=events-counter.spec \
+		--spec=redborder-events-counter.spec \
 		--sources=SOURCES
 	@echo "======= Source RPM now available in $(RESULT_DIR) ======="
 
