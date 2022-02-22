@@ -1,4 +1,4 @@
-Name:    events-counter
+Name:    redborder-events-counter
 Version: %{__version}
 Release: %{__release}%{?dist}
 
@@ -46,30 +46,31 @@ export PKG_CONFIG_PATH=/usr/lib64/pkgconfig
 cd $GOPATH/src/github.com/redBorder/events-counter
 mkdir -p %{buildroot}/usr/bin
 prefix=%{buildroot}/usr PKG_CONFIG_PATH=/usr/lib/pkgconfig/ make install
-mkdir -p %{buildroot}/usr/share/events-counter
-mkdir -p %{buildroot}/etc/events-counter
-install -D -m 644 events-counter.service %{buildroot}/usr/lib/systemd/system/events-counter.service
-install -D -m 644 packaging/rpm/config.yml %{buildroot}/usr/share/events-counter
+mkdir -p %{buildroot}/usr/share/redborder-events-counter
+mkdir -p %{buildroot}/etc/redborder-events-counter
+install -D -m 644 redborder-events-counter.service %{buildroot}/usr/lib/systemd/system/redborder-events-counter.service
+install -D -m 644 packaging/rpm/config.yml %{buildroot}/usr/share/redborder-events-counter
 
 %clean
 rm -rf %{buildroot}
 
 %pre
-getent group events-counter >/dev/null || groupadd -r events-counter
-getent passwd events-counter >/dev/null || \
-    useradd -r -g events-counter -d / -s /sbin/nologin \
-    -c "User of events-counter service" events-counter
+getent group redborder-events-counter >/dev/null || groupadd -r redborder-events-counter
+getent passwd redborder-events-counter >/dev/null || \
+    useradd -r -g redborder-events-counter -d / -s /sbin/nologin \
+    -c "User of redborder-events-counter service" redborder-events-counter
 exit 0
 
 %post -p /sbin/ldconfig
 %postun -p /sbin/ldconfig
+systemctl daemon-reload
 
 %files
 %defattr(755,root,root)
-/usr/bin/events-counter
+/usr/bin/redborder-events-counter
 %defattr(644,root,root)
-/usr/share/events-counter/config.yml
-/usr/lib/systemd/system/events-counter.service
+/usr/share/redborder-events-counter/config.yml
+/usr/lib/systemd/system/redborder-events-counter.service
 
 %changelog
 * Mon Oct 04 2021 Miguel Negrón <manegron@redborder.com> & David Vanhoucke <dvanhoucke@redborder.com> - 1.0.0-1

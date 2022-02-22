@@ -1,0 +1,11 @@
+[Unit]
+Description=Count bytes in kafka topics
+
+[Service]
+ExecStart=/usr/bin/redborder-events-counter -config /etc/redborder-events-counter/config.yml
+Restart=always
+User=redborder-events-counter
+Group=redborder-events-counter
+
+[Install]
+WantedBy=multi-user.target
