@@ -42,7 +42,6 @@ coverage:
 	@grep -h -v "mode: count" *.part >> coverage.out
 	@go tool cover -func coverage.out
 
-GLIDE := $(shell command -v glide 2> /dev/null)
 vendor:
 	@go mod init
 	@go mod tidy
