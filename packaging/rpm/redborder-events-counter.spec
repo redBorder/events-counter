@@ -6,13 +6,8 @@ License: GNU AGPLv3
 URL: https://github.com/redBorder/events-counter
 Source0: %{name}-%{version}.tar.gz
 
-BuildRequires: go = 1.6.3
-BuildRequires: glide rsync gcc git
-BuildRequires:	rsync mlocate pkgconfig
-BuildRequires: librd-devel = 0.1.0
-#BuildRequires: librdkafka-devel
-
-Requires: librd0 librdkafka1
+BuildRequires: go rsync gcc git pkgconfig librd-devel librdkafka-devel
+Requires: librd0 librdkafka
 
 Summary: Counts bytes of kafka topics
 Group:   Development/Libraries/Go
@@ -24,15 +19,10 @@ Group:   Development/Libraries/Go
 %setup -qn %{name}-%{version}
 
 %build
-git clone --branch v0.9.2 https://github.com/edenhill/librdkafka.git /tmp/librdkafka-v0.9.2
-cd /tmp/librdkafka-v0.9.2
-./configure --prefix=/usr --sbindir=/usr/bin --exec-prefix=/usr && make
-make install
-cd -
-ldconfig
 export PKG_CONFIG_PATH=/usr/lib/pkgconfig
 export GOPATH=${PWD}/gopath
 export PATH=${GOPATH}:${PATH}
+
 mkdir -p $GOPATH/src/github.com/redBorder/events-counter
 rsync -az --exclude=gopath/ ./ $GOPATH/src/github.com/redBorder/events-counter
 cd $GOPATH/src/github.com/redBorder/events-counter
@@ -73,5 +63,7 @@ systemctl daemon-reload
 /usr/lib/systemd/system/redborder-events-counter.service
 
 %changelog
+* Wed Oct 04 2023 David Vanhoucke <dvanhoucke@redborder.com> - 2.0.0-1
+- adapt for go mod
 * Mon Oct 04 2021 Miguel Negrón <manegron@redborder.com> & David Vanhoucke <dvanhoucke@redborder.com> - 1.0.0-1
 - first spec version
