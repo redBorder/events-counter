@@ -15,8 +15,6 @@ Group:   Development/Libraries/Go
 %description
 %{summary}
 
-%global debug_package %{nil}
-
 %prep
 %setup -qn %{name}-%{version}
 
