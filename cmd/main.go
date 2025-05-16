@@ -45,8 +45,8 @@ func init() {
 		DisableTimestamp: true,
 	}
 
-	versionFlag := flag.Bool("version", false, "Show version info")
-	debugFlag := flag.Bool("debug", false, "Show debug info")
+	versionFlag := flag.Bool("version", true, "Show version info")
+	debugFlag := flag.Bool("debug", true, "Show debug info")
 	configFlag := flag.String("config", "", "Application configuration file")
 	flag.Parse()
 
