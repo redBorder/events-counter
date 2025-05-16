@@ -6,11 +6,13 @@ License: GNU AGPLv3
 URL: https://github.com/redBorder/events-counter
 Source0: %{name}-%{version}.tar.gz
 
-BuildRequires: go rsync gcc git pkgconfig librd-devel librdkafka-devel
+BuildRequires: go rsync gcc git
 Requires: librd0 librdkafka
 
 Summary: Counts bytes of kafka topics
 Group:   Development/Libraries/Go
+
+%global debug_package %{nil}
 
 %description
 %{summary}
@@ -19,7 +21,6 @@ Group:   Development/Libraries/Go
 %setup -qn %{name}-%{version}
 
 %build
-export PKG_CONFIG_PATH=/usr/lib/pkgconfig
 export GOPATH=${PWD}/gopath
 export PATH=${GOPATH}:${PATH}
 
@@ -32,10 +33,8 @@ make
 export PARENT_BUILD=${PWD}
 export GOPATH=${PWD}/gopath
 export PATH=${GOPATH}:${PATH}
-export PKG_CONFIG_PATH=/usr/lib64/pkgconfig
 cd $GOPATH/src/github.com/redBorder/events-counter
 mkdir -p %{buildroot}/usr/bin
-prefix=%{buildroot}/usr PKG_CONFIG_PATH=/usr/lib/pkgconfig/ make install
 mkdir -p %{buildroot}/usr/share/redborder-events-counter
 mkdir -p %{buildroot}/etc/redborder-events-counter
 install -D -m 644 redborder-events-counter.service %{buildroot}/usr/lib/systemd/system/redborder-events-counter.service
