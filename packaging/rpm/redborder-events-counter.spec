@@ -34,9 +34,15 @@ export PARENT_BUILD=${PWD}
 export GOPATH=${PWD}/gopath
 export PATH=${GOPATH}:${PATH}
 cd $GOPATH/src/github.com/redBorder/events-counter
+
 mkdir -p %{buildroot}/usr/bin
 mkdir -p %{buildroot}/usr/share/redborder-events-counter
 mkdir -p %{buildroot}/etc/redborder-events-counter
+
+# 🧩 Install binary
+install -D -m 755 redborder-events-counter %{buildroot}/usr/bin/redborder-events-counter
+
+# 🧩 Install service and config
 install -D -m 644 redborder-events-counter.service %{buildroot}/usr/lib/systemd/system/redborder-events-counter.service
 install -D -m 644 packaging/rpm/config.yml %{buildroot}/usr/share/redborder-events-counter
 
