@@ -6,7 +6,7 @@ License: GNU AGPLv3
 URL: https://github.com/redBorder/events-counter
 Source0: %{name}-%{version}.tar.gz
 
-BuildRequires: go rsync gcc git
+BuildRequires: go rsync gcc git pkgconfig librd-devel librdkafka-devel
 Requires: librd0 librdkafka
 
 Summary: Counts bytes of kafka topics
@@ -21,6 +21,7 @@ Group:   Development/Libraries/Go
 %setup -qn %{name}-%{version}
 
 %build
+export PKG_CONFIG_PATH=/usr/lib/pkgconfig
 export GOPATH=${PWD}/gopath
 export PATH=${GOPATH}:${PATH}
 
@@ -33,16 +34,12 @@ make
 export PARENT_BUILD=${PWD}
 export GOPATH=${PWD}/gopath
 export PATH=${GOPATH}:${PATH}
+export PKG_CONFIG_PATH=/usr/lib64/pkgconfig
 cd $GOPATH/src/github.com/redBorder/events-counter
-
 mkdir -p %{buildroot}/usr/bin
+prefix=%{buildroot}/usr PKG_CONFIG_PATH=/usr/lib/pkgconfig/ make install
 mkdir -p %{buildroot}/usr/share/redborder-events-counter
 mkdir -p %{buildroot}/etc/redborder-events-counter
-
-# 🧩 Install binary
-install -D -m 755 redborder-events-counter %{buildroot}/usr/bin/redborder-events-counter
-
-# 🧩 Install service and config
 install -D -m 644 redborder-events-counter.service %{buildroot}/usr/lib/systemd/system/redborder-events-counter.service
 install -D -m 644 packaging/rpm/config.yml %{buildroot}/usr/share/redborder-events-counter
 
@@ -56,8 +53,11 @@ getent passwd redborder-events-counter >/dev/null || \
     -c "User of redborder-events-counter service" redborder-events-counter
 exit 0
 
-%post -p /sbin/ldconfig
-%postun -p /sbin/ldconfig
+%post
+/sbin/ldconfig
+
+%postun
+/sbin/ldconfig
 systemctl daemon-reload
 
 %files
@@ -69,6 +69,9 @@ systemctl daemon-reload
 
 %changelog
 * Wed Oct 04 2023 David Vanhoucke <dvanhoucke@redborder.com> - 2.0.0-1
+- adapt for go mod
+* Mon Oct 04 2021 Miguel Negrón <manegron@redborder.com> & David Vanhoucke <dvanhoucke@redborder.com> - 1.0.0-1
+- first spec versionvid Vanhoucke <dvanhoucke@redborder.com> - 2.0.0-1
 - adapt for go mod
 * Mon Oct 04 2021 Miguel Negrón <manegron@redborder.com> & David Vanhoucke <dvanhoucke@redborder.com> - 1.0.0-1
 - first spec version
