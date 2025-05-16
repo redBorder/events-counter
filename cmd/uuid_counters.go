@@ -51,8 +51,8 @@ func UUIDCountersPipeline(config *AppConfig) {
 			QueueSize: 10,
 		})
 
-	components = append(components, &batcher.Batcher{
-		Config: batcher.Config{
+	components = append(components, &batch.Batcher{
+		Config: batch.Config{
 			Workers:       1,
 			TimeoutMillis: config.Counters.BatchTimeoutSeconds,
 			Limit:         uint64(config.Counters.BatchMaxMessages),
