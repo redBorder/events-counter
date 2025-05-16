@@ -114,9 +114,6 @@ func LoadLicenses(config *AppConfig) (LimitBytes, error) {
 
 		limits[license.UUID] = &licenseStatus{}
 
-		// Hardcode expiration date (Saturday, January 1, 2000 12:00:00 AM)
-		license.ExpireAt = 946684800
-
 		expires := time.Unix(license.ExpireAt, 0)
 		if expires.Before(time.Now()) {
 			log.Warnf("License %s has expired", license.UUID)
