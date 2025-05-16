@@ -71,7 +71,4 @@ systemctl daemon-reload
 * Wed Oct 04 2023 David Vanhoucke <dvanhoucke@redborder.com> - 2.0.0-1
 - adapt for go mod
 * Mon Oct 04 2021 Miguel Negrón <manegron@redborder.com> & David Vanhoucke <dvanhoucke@redborder.com> - 1.0.0-1
-- first spec versionvid Vanhoucke <dvanhoucke@redborder.com> - 2.0.0-1
-- adapt for go mod
-* Mon Oct 04 2021 Miguel Negrón <manegron@redborder.com> & David Vanhoucke <dvanhoucke@redborder.com> - 1.0.0-1
 - first spec version
