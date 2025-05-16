@@ -53,8 +53,11 @@ getent passwd redborder-events-counter >/dev/null || \
     -c "User of redborder-events-counter service" redborder-events-counter
 exit 0
 
-%post -p /sbin/ldconfig
-%postun -p /sbin/ldconfig
+%post
+/sbin/ldconfig
+
+%postun
+/sbin/ldconfig
 systemctl daemon-reload
 
 %files
