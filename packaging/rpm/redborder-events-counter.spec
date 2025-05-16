@@ -12,6 +12,8 @@ Requires: librd0 librdkafka
 Summary: Counts bytes of kafka topics
 Group:   Development/Libraries/Go
 
+%global debug_package %{nil}
+
 %description
 %{summary}
 
