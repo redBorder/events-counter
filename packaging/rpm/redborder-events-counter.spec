@@ -55,10 +55,10 @@ exit 0
 
 %post
 /sbin/ldconfig
+systemctl daemon-reload
 
 %postun
 /sbin/ldconfig
-systemctl daemon-reload
 
 %files
 %defattr(755,root,root)
