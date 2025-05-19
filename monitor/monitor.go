@@ -21,6 +21,7 @@ package monitor
 import (
 	"github.com/benbjohnson/clock"
 	"github.com/redBorder/rbforwarder/utils"
+	log "github.com/sirupsen/logrus"
 )
 
 type logger interface {
@@ -89,13 +90,37 @@ func (mon *CountersMonitor) OnMessage(m *utils.Message, done utils.Done) {
 	if showTotal, ok := m.Opts.Get("show_total"); ok {
 		if showTotalBool, ok := showTotal.(bool); ok {
 			if showTotalBool {
+				var total uint64 = 0
+
 				for k, v := range mon.db {
+					total += v
 					mon.Log.Infof("[%s] Consumed bytes %d", k, v)
 				}
+				// Imprime el total
+				log.Infof("Total consumed bytes: %d", total)
 			}
 		}
 
 		done(m, 0, "Show total")
+		return
+	}
+
+	if _, ok := m.Opts.Get("allowed_licenses"); ok {
+		if resetCounters, ok := m.Opts.Get("reset_counters"); ok {
+			if shouldReset, ok := resetCounters.(bool); ok {
+				if shouldReset {
+					for organization := range mon.db {
+						mon.db[organization] = 0
+					}
+					mon.Log.Infoln("Counters has been reset")
+				}
+			}
+		}
+
+		licenses, _ := m.Opts.Get("licenses")
+		// FIXME check assertion
+		m.PushPayload(createLicensesAllowedMessage(licenses.([]string)))
+		done(m, 0, "Allowed licenses")
 		return
 	}
 
@@ -126,25 +151,6 @@ func (mon *CountersMonitor) OnMessage(m *utils.Message, done utils.Done) {
 
 	if bytes < mon.Limits[count.UUID] {
 		done(m, 0, "Limit not reached")
-		return
-	}
-
-	if _, ok := m.Opts.Get("allowed_licenses"); ok {
-		if resetCounters, ok := m.Opts.Get("reset_counters"); ok {
-			if shouldReset, ok := resetCounters.(bool); ok {
-				if shouldReset {
-					for organization := range mon.db {
-						mon.db[organization] = 0
-					}
-					mon.Log.Infoln("Counters has been reset")
-				}
-			}
-		}
-
-		licenses, _ := m.Opts.Get("licenses")
-		// FIXME check assertion
-		m.PushPayload(createLicensesAllowedMessage(licenses.([]string), bytes))
-		done(m, 0, "Allowed licenses")
 		return
 	}
 

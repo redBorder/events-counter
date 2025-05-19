@@ -68,15 +68,14 @@ func createUknownUUIDMessage(uuid string) []byte {
 	return data
 }
 
-func createLicensesAllowedMessage(uuids []string, bytes uint64) []byte {
+func createLicensesAllowedMessage(uuids []string) []byte {
 	var data []byte
 
 	alert := &Alert{
-		Timestamp:    time.Now().Unix(),
-		Monitor:      "alert",
-		Licenses:     uuids,
-		Type:         "allowed_licenses",
-		CurrentBytes: bytes,
+		Timestamp: time.Now().Unix(),
+		Monitor:   "alert",
+		Licenses:  uuids,
+		Type:      "allowed_licenses",
 	}
 
 	data, _ = json.Marshal(alert)
