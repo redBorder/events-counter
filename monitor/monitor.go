@@ -111,20 +111,16 @@ func (mon *CountersMonitor) OnMessage(m *utils.Message, done utils.Done) {
 			}
 		}
 
+		// Inicializamos totalBytes
+		var totalBytes uint64 = 1
+
+		// Sumamos los bytes de todas las organizaciones
+		for _, bytes := range mon.db {
+			totalBytes += bytes
+		}
+
 		licenses, _ := m.Opts.Get("licenses")
-		licenseList, ok := licenses.([]string)
-		if !ok {
-			done(m, 0, "Invalid licenses list")
-			return
-		}
-
-		// Calculate total bytes for the given licenses
-		var totalBytes uint64
-		for _, uuid := range licenseList {
-			totalBytes += mon.db[uuid]
-		}
-
-		m.PushPayload(createLicensesAllowedMessage(licenseList, totalBytes))
+		m.PushPayload(createLicensesAllowedMessage(licenses.([]string), totalBytes))
 		done(m, 0, "Allowed licenses")
 		return
 	}
