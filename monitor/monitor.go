@@ -99,35 +99,6 @@ func (mon *CountersMonitor) OnMessage(m *utils.Message, done utils.Done) {
 		return
 	}
 
-	if _, ok := m.Opts.Get("allowed_licenses"); ok {
-		licenses, _ := m.Opts.Get("licenses")
-		licenseList, ok := licenses.([]string)
-		if !ok {
-			done(m, 0, "Invalid licenses list")
-			return
-		}
-
-		var totalBytes uint64 = 1
-		for _, uuid := range licenseList {
-			totalBytes += mon.db[uuid]
-		}
-
-		if resetCounters, ok := m.Opts.Get("reset_counters"); ok {
-			if shouldReset, ok := resetCounters.(bool); ok {
-				if shouldReset {
-					for organization := range mon.db {
-						mon.db[organization] = 0
-					}
-					mon.Log.Infoln("Counters has been reset")
-				}
-			}
-		}
-
-		m.PushPayload(createLicensesAllowedMessage(licenseList, totalBytes))
-		done(m, 0, "Allowed licenses")
-		return
-	}
-
 	if payload, err = m.PopPayload(); err != nil {
 		done(m, 0, "No payload to produce")
 		return
@@ -155,6 +126,25 @@ func (mon *CountersMonitor) OnMessage(m *utils.Message, done utils.Done) {
 
 	if bytes < mon.Limits[count.UUID] {
 		done(m, 0, "Limit not reached")
+		return
+	}
+
+	if _, ok := m.Opts.Get("allowed_licenses"); ok {
+		if resetCounters, ok := m.Opts.Get("reset_counters"); ok {
+			if shouldReset, ok := resetCounters.(bool); ok {
+				if shouldReset {
+					for organization := range mon.db {
+						mon.db[organization] = 0
+					}
+					mon.Log.Infoln("Counters has been reset")
+				}
+			}
+		}
+
+		licenses, _ := m.Opts.Get("licenses")
+		// FIXME check assertion
+		m.PushPayload(createLicensesAllowedMessage(licenses.([]string), bytes))
+		done(m, 0, "Allowed licenses")
 		return
 	}
 
