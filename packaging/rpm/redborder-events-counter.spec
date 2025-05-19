@@ -55,10 +55,20 @@ exit 0
 
 %post
 /sbin/ldconfig
+systemctl daemon-reload
+case "$1" in
+  1)
+    # Initial install
+    :
+  ;;
+  2)
+    # Upgrade: Try to restart only if it was running to apply new config
+    systemctl try-restart redborder-events-counter.service >/dev/null 2>&1 || :
+  ;;
+esac
 
 %postun
 /sbin/ldconfig
-systemctl daemon-reload
 
 %files
 %defattr(755,root,root)
@@ -69,7 +79,7 @@ systemctl daemon-reload
 
 %changelog
 * Mon May 19 2025 Rafael Gómez <rgomez@redborder.com> - 3.0.0-1
-- Disable debug package creation and replace post-install/uninstall script commands with /sbin/ldconfig and systemctl daemon-reload.
+- Disable debug package creation and restarting redborder-events-counter.service when upgrading to apply new config.
 * Wed Oct 04 2023 David Vanhoucke <dvanhoucke@redborder.com> - 2.0.0-1
 - adapt for go mod
 * Mon Oct 04 2021 Miguel Negrón <manegron@redborder.com> & David Vanhoucke <dvanhoucke@redborder.com> - 1.0.0-1
