@@ -249,7 +249,7 @@ func FormatLicense(license *License) string {
 		keyColor("\tCluster UUID:      ")+"%s\n"+
 		keyColor("\tOrganization UUID: ")+"%s\n"+
 		keyColor("\tExpires:           ")+"%s\n"+
-		keyColor("\tLimit bytes 2.0.9: ")+"%d",
+		keyColor("\tLimit bytes 2.0.10: ")+"%d",
 		license.UUID,
 		license.ClusterUUID,
 		license.Organization,
