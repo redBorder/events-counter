@@ -87,23 +87,23 @@ func (mon *CountersMonitor) OnMessage(m *utils.Message, done utils.Done) {
 		bytes   uint64
 	)
 
+	var total uint64 = 0
+
 	if showTotal, ok := m.Opts.Get("show_total"); ok {
 		if showTotalBool, ok := showTotal.(bool); ok {
 			if showTotalBool {
-				var total uint64 = 0
-
 				for k, v := range mon.db {
 					total += v
 					mon.Log.Infof("[%s] Consumed bytes %d", k, v)
 				}
-				// Imprime el total
-				log.Infof("Total consumed bytes: %d", total)
 			}
 		}
 
 		done(m, 0, "Show total")
 		return
 	}
+
+	log.Infof("Total consumed bytes: %d", total)
 
 	if _, ok := m.Opts.Get("allowed_licenses"); ok {
 		if resetCounters, ok := m.Opts.Get("reset_counters"); ok {
