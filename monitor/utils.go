@@ -68,14 +68,15 @@ func createUknownUUIDMessage(uuid string) []byte {
 	return data
 }
 
-func createLicensesAllowedMessage(uuids []string) []byte {
+func createLicensesAllowedMessage(uuids []string, bytes uint64) []byte {
 	var data []byte
 
 	alert := &Alert{
-		Timestamp: time.Now().Unix(),
-		Monitor:   "alert",
-		Licenses:  uuids,
-		Type:      "allowed_licenses",
+		Timestamp:    time.Now().Unix(),
+		Monitor:      "alert",
+		Licenses:     uuids,
+		Type:         "allowed_licenses",
+		CurrentBytes: bytes,
 	}
 
 	data, _ = json.Marshal(alert)
@@ -90,15 +91,18 @@ func createLicensesAllowedMessage(uuids []string) []byte {
 // if the timestamp belongs to the timestamp, and false in other case.
 //
 // For example:
-//  - "period" is 86400 seconds (24h)
-//  - "offset" is 3600 (1h)
-//  - "now" is the current timestamp
-//  - "timestamp" is the timestamp for 6:00 today
 //
-//  As the "period" is set to 24h, the function will check if "timestamp"
-//  belongs to the current day. The current day starts at 01:00 because "offset"
-//  is 1h.
+//   - "period" is 86400 seconds (24h)
 //
+//   - "offset" is 3600 (1h)
+//
+//   - "now" is the current timestamp
+//
+//   - "timestamp" is the timestamp for 6:00 today
+//
+//     As the "period" is set to 24h, the function will check if "timestamp"
+//     belongs to the current day. The current day starts at 01:00 because "offset"
+//     is 1h.
 func belongsToInterval(timestamp, period, offset, now int64) bool {
 	var intervalStart int64
 	periodStart := int64(now - now%period)

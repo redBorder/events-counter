@@ -73,12 +73,12 @@ func (mon *CountersMonitor) Spawn(id int) utils.Composer {
 }
 
 // OnMessage process new messages.
-// - Parses the JSON message and check if the UUID is on the limits database,
-//   if not, a message alerting an unknown uuid is sent to kafka.
-// - If the UUID is known (is on the limit map), increment the count of messages
-//   on the internal database.
-// - Check if the updated value exceds the allowed number of bytes and if it
-//   does, send an alert to Kafka.
+//   - Parses the JSON message and check if the UUID is on the limits database,
+//     if not, a message alerting an unknown uuid is sent to kafka.
+//   - If the UUID is known (is on the limit map), increment the count of messages
+//     on the internal database.
+//   - Check if the updated value exceds the allowed number of bytes and if it
+//     does, send an alert to Kafka.
 func (mon *CountersMonitor) OnMessage(m *utils.Message, done utils.Done) {
 	var (
 		payload []byte
@@ -112,8 +112,19 @@ func (mon *CountersMonitor) OnMessage(m *utils.Message, done utils.Done) {
 		}
 
 		licenses, _ := m.Opts.Get("licenses")
-		// FIXME check assertion
-		m.PushPayload(createLicensesAllowedMessage(licenses.([]string)))
+		licenseList, ok := licenses.([]string)
+		if !ok {
+			done(m, 0, "Invalid licenses list")
+			return
+		}
+
+		// Calculate total bytes for the given licenses
+		var totalBytes uint64
+		for _, uuid := range licenseList {
+			totalBytes += mon.db[uuid]
+		}
+
+		m.PushPayload(createLicensesAllowedMessage(licenseList, totalBytes))
 		done(m, 0, "Allowed licenses")
 		return
 	}
