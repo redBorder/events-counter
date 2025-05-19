@@ -100,6 +100,18 @@ func (mon *CountersMonitor) OnMessage(m *utils.Message, done utils.Done) {
 	}
 
 	if _, ok := m.Opts.Get("allowed_licenses"); ok {
+		licenses, _ := m.Opts.Get("licenses")
+		licenseList, ok := licenses.([]string)
+		if !ok {
+			done(m, 0, "Invalid licenses list")
+			return
+		}
+
+		var totalBytes uint64 = 1
+		for _, uuid := range licenseList {
+			totalBytes += mon.db[uuid]
+		}
+
 		if resetCounters, ok := m.Opts.Get("reset_counters"); ok {
 			if shouldReset, ok := resetCounters.(bool); ok {
 				if shouldReset {
@@ -111,16 +123,7 @@ func (mon *CountersMonitor) OnMessage(m *utils.Message, done utils.Done) {
 			}
 		}
 
-		// Inicializamos totalBytes
-		var totalBytes uint64 = 1
-
-		// Sumamos los bytes de todas las organizaciones
-		for _, bytes := range mon.db {
-			totalBytes += bytes
-		}
-
-		licenses, _ := m.Opts.Get("licenses")
-		m.PushPayload(createLicensesAllowedMessage(licenses.([]string), totalBytes))
+		m.PushPayload(createLicensesAllowedMessage(licenseList, totalBytes))
 		done(m, 0, "Allowed licenses")
 		return
 	}
