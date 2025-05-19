@@ -56,6 +56,16 @@ exit 0
 %post
 /sbin/ldconfig
 systemctl daemon-reload
+case "$1" in
+  1)
+    # Initial install
+    :
+  ;;
+  2)
+    # Upgrade: Try to restart only if it was running to apply new config
+    systemctl try-restart redborder-events-counter.service >/dev/null 2>&1 || :
+  ;;
+esac
 
 %postun
 /sbin/ldconfig
