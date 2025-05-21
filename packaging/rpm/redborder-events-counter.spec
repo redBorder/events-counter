@@ -68,7 +68,9 @@ case "$1" in
 esac
 
 %postun
-/sbin/ldconfig
+if [ "$1" -eq 0 ]; then
+  /sbin/ldconfig
+fi
 
 %files
 %defattr(755,root,root)
