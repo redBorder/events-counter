@@ -23,7 +23,7 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 
 	yaml "gopkg.in/yaml.v2"
 )
