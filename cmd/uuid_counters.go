@@ -128,12 +128,23 @@ func UUIDCountersPipeline(config *AppConfig) {
 						continue
 					}
 
+					parsed := make(map[string]interface{})
+					if err := json.Unmarshal(event.Value, &parsed); err != nil {
+						log.Warn("Cannot parse JSON message: " + err.Error())
+						continue
+					}
+
+					sensorUUID, _ := parsed["sensor_uuid"].(string)
+					sensorName, _ := parsed["sensor_name"].(string)
+
 					pipeline.Produce(event.Value, map[string]interface{}{
 						// NOTE batch_group and uuid should be the same to ensure that
 						// messages from the same organization are grouped together when
 						// they are counted.
 						"uuid":        org,
 						"batch_group": org,
+						"sensor_uuid": sensorUUID,
+						"sensor_name": sensorName,
 					}, nil)
 
 				default:
