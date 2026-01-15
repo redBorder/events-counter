@@ -13,7 +13,7 @@
 
 `events-counter` is a simple utility that can be used for accounting messages
 in a Kafka topic. It supports accounting by number of bytes (regardless the
-numer of messages).
+number of messages).
 
 Messages are expected to be on JSON format when counting messages.
 
