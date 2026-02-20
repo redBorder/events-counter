@@ -31,6 +31,8 @@ type Monitor struct {
 	Unit      string `json:"unit"`
 	Value     uint64 `json:"value"`
 	UUID      string `json:"organization_uuid"`
+	SensorUUID string `json:"sensor_uuid,omitempty"`
+	SensorName string `json:"sensor_name,omitempty"`
 	Timestamp int64  `json:"timestamp"`
 }
 
@@ -76,10 +78,16 @@ func (c *Counter) OnMessage(m *utils.Message, done utils.Done) {
 		Timestamp: time.Now().Unix(),
 	}
 
-	if uuid, ok := m.Opts.Get("uuid"); ok {
-		if uuid, ok := uuid.(string); ok {
-			countData.UUID = uuid
-		}
+	if v, ok := m.Opts.Get("uuid"); ok {
+		if s, ok := v.(string); ok { countData.UUID = s }
+	}
+
+	// sensor_uuid / sensor_name (must be added to m.Opts in uuid_counters.go)
+	if v, ok := m.Opts.Get("sensor_uuid"); ok {
+		if s, ok := v.(string); ok && s != "" { countData.SensorUUID = s }
+	}
+	if v, ok := m.Opts.Get("sensor_name"); ok {
+		if s, ok := v.(string); ok && s != "" { countData.SensorName = s }
 	}
 
 	countMessage, _ := json.Marshal(countData)
